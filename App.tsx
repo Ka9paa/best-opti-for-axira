@@ -104,23 +104,3 @@ export default function App() {
     </div>
   );
 }
-```
-
-THE ONLY 2 CHANGES:
-
-Line 56: 
-```tsx
-// OLD:
-return <LandingPage onGetStarted={handleGetStarted} />;
-
-// NEW:
-return <LandingPage onNavigate={(page) => setCurrentPage(page)} />;
-```
-
-Line 91:
-```tsx
-// OLD:
-return <LandingPage onGetStarted={handleGetStarted} />;
-
-// NEW:
-return <LandingPage onNavigate={(page) => setCurrentPage(page)} />;
