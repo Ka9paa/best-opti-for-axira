@@ -53,7 +53,7 @@ export default function App() {
   const renderPage = () => {
     switch (currentPage) {
       case 'landing':
-        return <LandingPage onGetStarted={handleGetStarted} />;
+        return <LandingPage onNavigate={(page) => setCurrentPage(page)} />;
       case 'pricing':
         return <PricingPage onGetStarted={handleGetStarted} />;
       case 'login':
@@ -89,7 +89,7 @@ export default function App() {
       case 'history':
         return <History onBack={() => setCurrentPage('dashboard')} />;
       default:
-        return <LandingPage onGetStarted={handleGetStarted} />;
+        return <LandingPage onNavigate={(page) => setCurrentPage(page)} />;
     }
   };
 
@@ -104,3 +104,23 @@ export default function App() {
     </div>
   );
 }
+```
+
+THE ONLY 2 CHANGES:
+
+Line 56: 
+```tsx
+// OLD:
+return <LandingPage onGetStarted={handleGetStarted} />;
+
+// NEW:
+return <LandingPage onNavigate={(page) => setCurrentPage(page)} />;
+```
+
+Line 91:
+```tsx
+// OLD:
+return <LandingPage onGetStarted={handleGetStarted} />;
+
+// NEW:
+return <LandingPage onNavigate={(page) => setCurrentPage(page)} />;
