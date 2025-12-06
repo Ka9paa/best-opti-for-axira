@@ -13,7 +13,7 @@ export function Logo({ size = 'md', className = '' }: LogoProps) {
 
   return (
     <img 
-      src="/axira-logo.svg" 
+      src="/axira-logo.png" 
       alt="Axira Logo" 
       className={`${sizeMap[size]} ${className} object-contain`}
     />
