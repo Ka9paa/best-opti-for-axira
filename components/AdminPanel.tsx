@@ -64,9 +64,10 @@ interface KeyData {
 interface AdminPanelProps {
   currentUsername: string;
   onLogout: () => void;
+  onBack?: () => void;
 }
 
-export function AdminPanel({ currentUsername, onLogout }: AdminPanelProps) {
+export function AdminPanel({ currentUsername, onLogout, onBack }: AdminPanelProps) {
   const [activeTab, setActiveTab] = useState<'keys' | 'users' | 'admins'>('users');
   const [searchQuery, setSearchQuery] = useState('');
   const [adminList, setAdminList] = useState<string[]>([]);
