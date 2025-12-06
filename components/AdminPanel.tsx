@@ -79,8 +79,16 @@ export function AdminPanel({ currentUsername, onLogout, onBack }: AdminPanelProp
   const [errorMessage, setErrorMessage] = useState('');
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [visiblePasswords, setVisiblePasswords] = useState<Set<string>>(new Set());
+  const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'info'; title: string; message: string } | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
 
   const isOwner = currentUsername.toLowerCase() === OWNER_USERNAME.toLowerCase();
+
+  // Show notification
+  const showNotification = (type: 'success' | 'error' | 'info', title: string, message: string) => {
+    setNotification({ type, title, message });
+    setTimeout(() => setNotification(null), 5000); // Auto-dismiss after 5 seconds
+  };
 
   // Toggle password visibility
   const togglePasswordVisibility = (username: string) => {
@@ -153,19 +161,19 @@ export function AdminPanel({ currentUsername, onLogout, onBack }: AdminPanelProp
   // Add admin (owner only)
   const handleAddAdmin = () => {
     if (!isOwner) {
-      alert('Only the owner can add admins!');
+      showNotification('error', 'Permission Denied', 'Only the owner can add admins!');
       return;
     }
 
     if (!newAdminUsername.trim()) {
-      alert('Please enter a username');
+      showNotification('error', 'Invalid Input', 'Please enter a username');
       return;
     }
 
     // ✅ CHECK IF USER EXISTS IN DATABASE
     const savedUsers = localStorage.getItem('optiaxira_users');
     if (!savedUsers) {
-      alert('❌ No users found in the database. This user has never logged in.');
+      showNotification('error', 'No Users Found', 'No users found in the database. This user has never logged in.');
       return;
     }
 
@@ -173,30 +181,29 @@ export function AdminPanel({ currentUsername, onLogout, onBack }: AdminPanelProp
     const userExists = users.find((u: any) => u.username.toLowerCase() === newAdminUsername.toLowerCase());
 
     if (!userExists) {
-      alert(`❌ USER NOT FOUND!\n\n"${newAdminUsername}" has never logged in to Axira Optimizer.\n\nOnly users who have created an account and logged in can be made admins.`);
+      showNotification('error', 'USER NOT FOUND', `"${newAdminUsername}" has never logged in to Axira Optimizer. Only users who have created an account and logged in can be made admins.`);
       return;
     }
 
     if (adminList.includes(newAdminUsername.toLowerCase())) {
-      alert('This user is already an admin');
+      showNotification('info', 'Already Exists', 'This user is already an admin');
       return;
     }
 
     saveAdminList([...adminList, newAdminUsername.toLowerCase()]);
     setNewAdminUsername('');
-    alert(`✅ SUCCESS!\n\n${newAdminUsername} has been added as admin!\n\nUser Details:\n- Username: ${userExists.username}\n- Package: ${userExists.packageTier}\n- Last Login: ${userExists.lastLogin}\n- Total Logins: ${userExists.totalLogins || 0}`);
+    showNotification('success', '✅ Admin Added Successfully!', `${newAdminUsername} is now an admin!\n• Package: ${userExists.packageTier}\n• Last Login: ${userExists.lastLogin}\n• Total Logins: ${userExists.totalLogins || 0}`);
   };
 
   // Remove admin (owner only)
   const handleRemoveAdmin = (username: string) => {
     if (!isOwner) {
-      alert('Only the owner can remove admins!');
+      showNotification('error', 'Permission Denied', 'Only the owner can remove admins!');
       return;
     }
 
-    if (confirm(`Remove ${username} from admin list?`)) {
-      saveAdminList(adminList.filter(admin => admin !== username));
-    }
+    saveAdminList(adminList.filter(admin => admin !== username));
+    showNotification('success', 'Admin Removed', `${username} has been removed from the admin list`);
   };
 
   // Update key notes
@@ -212,7 +219,7 @@ export function AdminPanel({ currentUsername, onLogout, onBack }: AdminPanelProp
     );
     setEditingKey(null);
     setEditNotes('');
-    alert('✅ Notes saved successfully!');
+    showNotification('success', 'Notes Saved', 'Your notes have been saved successfully!');
   };
 
   // Ban/Unban user
@@ -224,23 +231,33 @@ export function AdminPanel({ currentUsername, onLogout, onBack }: AdminPanelProp
     const userIndex = users.findIndex((u: any) => u.username === username);
 
     if (userIndex !== -1) {
-      users[userIndex].status = users[userIndex].status === 'active' ? 'banned' : 'active';
+      const newStatus = users[userIndex].status === 'active' ? 'banned' : 'active';
+      users[userIndex].status = newStatus;
       localStorage.setItem('optiaxira_users', JSON.stringify(users));
       
       // Update local state
       setKeyData(users);
       
-      alert(`User ${users[userIndex].status === 'banned' ? 'BANNED' : 'UNBANNED'} successfully!`);
+      showNotification(
+        newStatus === 'banned' ? 'success' : 'info',
+        newStatus === 'banned' ? '🚫 User Banned' : '✅ User Unbanned',
+        `${username} has been ${newStatus === 'banned' ? 'BANNED' : 'UNBANNED'} successfully!`
+      );
     }
   };
 
   // Reset HWID
   const handleResetHWID = (username: string) => {
-    if (confirm(`⚠️ Reset HWID for ${username}? This will allow them to login from a new device.`)) {
-      resetUserHWID(username);
-      loadUsers();
-      alert('✅ HWID reset successfully! User can now login from a new device.');
-    }
+    setConfirmDialog({
+      title: '⚠️ Reset HWID?',
+      message: `Reset HWID for ${username}?\n\nThis will allow them to login from a new device.`,
+      onConfirm: () => {
+        resetUserHWID(username);
+        loadUsers();
+        showNotification('success', '✅ HWID Reset Complete', `${username} can now login from a new device!`);
+        setConfirmDialog(null);
+      }
+    });
   };
 
   // Filter keys based on search
@@ -267,7 +284,62 @@ export function AdminPanel({ currentUsername, onLogout, onBack }: AdminPanelProp
   };
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-black text-white relative">
+      {/* Notification Box */}
+      {notification && (
+        <div className={`fixed top-6 right-6 z-[9999] min-w-[400px] max-w-md p-5 rounded-xl border backdrop-blur-xl shadow-2xl animate-in slide-in-from-top duration-300 ${
+          notification.type === 'success' ? 'bg-green-500/20 border-green-500/50' :
+          notification.type === 'error' ? 'bg-red-500/20 border-red-500/50' :
+          'bg-blue-500/20 border-blue-500/50'
+        }`}>
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                {notification.type === 'success' && <span className="text-2xl">✅</span>}
+                {notification.type === 'error' && <span className="text-2xl">❌</span>}
+                {notification.type === 'info' && <span className="text-2xl">ℹ️</span>}
+                <h3 className={`text-lg ${
+                  notification.type === 'success' ? 'text-green-400' :
+                  notification.type === 'error' ? 'text-red-400' :
+                  'text-blue-400'
+                }`}>{notification.title}</h3>
+              </div>
+              <p className="text-white text-sm whitespace-pre-line leading-relaxed">{notification.message}</p>
+            </div>
+            <button
+              onClick={() => setNotification(null)}
+              className="text-gray-400 hover:text-white transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Dialog */}
+      {confirmDialog && (
+        <div className="fixed top-0 left-0 right-0 bottom-0 bg-black/50 flex items-center justify-center z-[9999]">
+          <div className="bg-gray-900/80 backdrop-blur-xl rounded-2xl p-8 border border-blue-500/30 max-w-md w-full">
+            <h3 className="text-white text-xl mb-4">{confirmDialog.title}</h3>
+            <p className="text-gray-400 text-sm mb-6">{confirmDialog.message}</p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setConfirmDialog(null)}
+                className="px-4 py-2 bg-gray-500/20 text-gray-400 rounded-lg hover:bg-gray-500/30 transition-all border border-gray-500/30"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDialog.onConfirm}
+                className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-all border border-red-500/30"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="p-8">
         {/* Header */}
         <div className="bg-gray-900/80 backdrop-blur-xl rounded-2xl p-6 border border-blue-500/30 mb-6">
@@ -593,7 +665,7 @@ export function AdminPanel({ currentUsername, onLogout, onBack }: AdminPanelProp
                                       localStorage.setItem('optiaxira_users', JSON.stringify(users));
                                       setKeyData(users);
                                       setEditingKey(null);
-                                      alert('✅ Notes saved!');
+                                      showNotification('success', 'Notes Saved', 'Your notes have been saved successfully!');
                                     }
                                   }
                                 }}
