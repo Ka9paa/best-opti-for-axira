@@ -13,17 +13,22 @@ import {
   Download,
   BarChart3,
   Sparkles,
-  Gauge
+  Gauge,
+  Shield
 } from 'lucide-react';
 import { Logo } from './Logo';
+
+const OWNER_USERNAME = "deccc";
 
 interface DashboardProps {
   username: string;
   licenseKey: string;
-  onNavigate: (page: 'games' | 'settings' | 'history') => void;
+  onNavigate: (page: 'games' | 'settings' | 'history' | 'admin') => void;
 }
 
 export default function Dashboard({ username, licenseKey, onNavigate }: DashboardProps) {
+  const isOwner = username.toLowerCase() === OWNER_USERNAME.toLowerCase();
+  
   const [systemInfo, setSystemInfo] = useState({
     cpu: 'Loading...',
     gpu: 'Loading...',
@@ -302,6 +307,21 @@ export default function Dashboard({ username, licenseKey, onNavigate }: Dashboar
                   →
                 </div>
               </button>
+
+              {isOwner && (
+                <button
+                  onClick={() => onNavigate('admin')}
+                  className="w-full bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white rounded-xl p-4 flex items-center justify-between transition-all group"
+                >
+                  <div className="flex items-center gap-3">
+                    <Shield className="w-5 h-5 text-red-400" />
+                    <span>Admin Panel</span>
+                  </div>
+                  <div className="w-6 h-6 bg-gray-700 rounded-lg flex items-center justify-center group-hover:translate-x-1 transition-transform">
+                    →
+                  </div>
+                </button>
+              )}
             </div>
 
             <div className="mt-6 p-4 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-500/30 rounded-xl">
