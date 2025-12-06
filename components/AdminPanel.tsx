@@ -295,7 +295,7 @@ export function AdminPanel({ currentUsername, onLogout, onBack }: AdminPanelProp
           {/* Header with Logo */}
           <div className="bg-gray-900/95 px-4 py-2.5 border-b border-white/10 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <img src="https://images.unsplash.com/photo-1760037028517-e5cc6e3ebd3e?w=80&h=80&fit=crop" alt="Axira Logo" className="w-5 h-5 rounded" />
+              <img src="/axira-logo.png" alt="Axira Logo" className="w-5 h-5 rounded" />
               <span className="text-white text-sm">Axira Optimizations</span>
             </div>
             <button
