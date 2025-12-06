@@ -29,12 +29,12 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
       <Snowflakes />
       
       {/* MASSIVE CHRISTMAS BANNER - BLUE THEME */}
-      <div className="fixed top-0 left-0 right-0 bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-600 py-6 text-center animate-pulse z-[100] shadow-2xl shadow-blue-500/50">
-        <p className="text-3xl">🎅 MERRY CHRISTMAS! HAPPY HOLIDAYS! 🎄 SPECIAL FESTIVE EDITION! ❄️</p>
+      <div className="fixed top-0 left-0 right-0 bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-600 py-3 text-center animate-pulse z-[100] shadow-2xl shadow-blue-500/50 pointer-events-none">
+        <p className="text-xl md:text-2xl">🎅 MERRY CHRISTMAS! HAPPY HOLIDAYS! 🎄 SPECIAL FESTIVE EDITION! ❄️</p>
       </div>
       
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-24">
         {/* Background Effects */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {/* Grid */}
