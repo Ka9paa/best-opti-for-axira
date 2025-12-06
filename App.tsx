@@ -97,13 +97,13 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col bg-black">
+    <div className="min-h-screen w-full bg-black">
       {currentPage !== 'landing' && <Snowflakes />}
       <Navbar
         onNavigate={handleNavigate}
         isLoggedIn={isLoggedIn}
       />
-      <main className="flex-1 w-full pt-16">{renderPage()}</main>
+      <main className="w-full pt-16">{renderPage()}</main>
     </div>
   );
 }
