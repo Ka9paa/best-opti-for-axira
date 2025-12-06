@@ -162,6 +162,21 @@ export function AdminPanel({ currentUsername, onLogout, onBack }: AdminPanelProp
       return;
     }
 
+    // ✅ CHECK IF USER EXISTS IN DATABASE
+    const savedUsers = localStorage.getItem('optiaxira_users');
+    if (!savedUsers) {
+      alert('❌ No users found in the database. This user has never logged in.');
+      return;
+    }
+
+    const users = JSON.parse(savedUsers);
+    const userExists = users.find((u: any) => u.username.toLowerCase() === newAdminUsername.toLowerCase());
+
+    if (!userExists) {
+      alert(`❌ USER NOT FOUND!\n\n"${newAdminUsername}" has never logged in to Axira Optimizer.\n\nOnly users who have created an account and logged in can be made admins.`);
+      return;
+    }
+
     if (adminList.includes(newAdminUsername.toLowerCase())) {
       alert('This user is already an admin');
       return;
@@ -169,7 +184,7 @@ export function AdminPanel({ currentUsername, onLogout, onBack }: AdminPanelProp
 
     saveAdminList([...adminList, newAdminUsername.toLowerCase()]);
     setNewAdminUsername('');
-    alert(`Added ${newAdminUsername} as admin`);
+    alert(`✅ SUCCESS!\n\n${newAdminUsername} has been added as admin!\n\nUser Details:\n- Username: ${userExists.username}\n- Package: ${userExists.packageTier}\n- Last Login: ${userExists.lastLogin}\n- Total Logins: ${userExists.totalLogins || 0}`);
   };
 
   // Remove admin (owner only)
