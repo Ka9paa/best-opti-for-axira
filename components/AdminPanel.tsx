@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Shield, Users, Key, Search, Plus, X, Edit2, Ban, UserCheck, Clock, Package, RefreshCw, Unlock, AlertTriangle, Eye, EyeOff } from 'lucide-react';
 import { resetUserHWID } from '../utils/deviceFingerprint';
-import axiraLogo from 'figma:asset/49b79875c32406da7a3245e6357173d52dacb9ff.png';
 
 // Admin utilities - these would normally be in a separate file
 // For web version, storing in localStorage (in production, use a real backend/database)
@@ -296,7 +295,7 @@ export function AdminPanel({ currentUsername, onLogout, onBack }: AdminPanelProp
           {/* Header with Logo */}
           <div className="bg-gray-900/95 px-4 py-2.5 border-b border-white/10 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <img src={axiraLogo} alt="Axira Logo" className="w-5 h-5" />
+              <img src="https://images.unsplash.com/photo-1760037028517-e5cc6e3ebd3e?w=80&h=80&fit=crop" alt="Axira Logo" className="w-5 h-5 rounded" />
               <span className="text-white text-sm">Axira Optimizations</span>
             </div>
             <button
