@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
-import LandingPage from './components/LandingPage';
-import PricingPage from './components/PricingPage';
-import Login from './components/Login';
+import { Navbar } from './components/Navbar';
+import { Footer } from './components/Footer';
+import { LandingPage } from './components/LandingPage';
+import { PricingPage } from './components/PricingPage';
+import { Login } from './components/Login';
 import Dashboard from './components/Dashboard';
-import GameSelection from './components/GameSelection';
-import Snowflakes from './components/Snowflakes';
+import { GameSelection } from './components/GameSelection';
+import { Snowflakes } from './components/Snowflakes';
 
 type Page = 'landing' | 'pricing' | 'login' | 'dashboard' | 'game-selection';
 
