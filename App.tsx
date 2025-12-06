@@ -1,24 +1,27 @@
 import { useState } from 'react';
 import { Navbar } from './components/Navbar';
-import { Footer } from './components/Footer';
 import { LandingPage } from './components/LandingPage';
 import { PricingPage } from './components/PricingPage';
-import { Login } from './components/Login';
+import { LoginPage } from './components/LoginPage';
 import Dashboard from './components/Dashboard';
 import { GameSelection } from './components/GameSelection';
+import { GameSpecificOptimizer } from './components/GameSpecificOptimizer';
+import History from './components/History';
+import Settings from './components/Settings';
 import { Snowflakes } from './components/Snowflakes';
 
-type Page = 'landing' | 'pricing' | 'login' | 'dashboard' | 'game-selection';
+type Page = 'landing' | 'pricing' | 'login' | 'dashboard' | 'games' | 'game-optimizer' | 'settings' | 'history';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>('landing');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState('');
-  const [licenseType, setLicenseType] = useState('');
+  const [packageName, setPackageName] = useState('');
+  const [selectedGame, setSelectedGame] = useState('');
 
-  const handleLoginSuccess = (user: string, license: string) => {
+  const handleLoginSuccess = (user: string, packageId: string, pkgName: string, key?: string) => {
     setUsername(user);
-    setLicenseType(license);
+    setPackageName(pkgName);
     setIsLoggedIn(true);
     setCurrentPage('dashboard');
   };
@@ -26,12 +29,25 @@ export default function App() {
   const handleLogout = () => {
     setIsLoggedIn(false);
     setUsername('');
-    setLicenseType('');
+    setPackageName('');
     setCurrentPage('landing');
   };
 
   const handleGetStarted = () => {
     setCurrentPage('login');
+  };
+
+  const handleNavigate = (page: 'home' | 'pricing' | 'login' | 'dashboard') => {
+    if (page === 'home') {
+      setCurrentPage('landing');
+    } else {
+      setCurrentPage(page);
+    }
+  };
+
+  const handleSelectGame = (game: string) => {
+    setSelectedGame(game);
+    setCurrentPage('game-optimizer');
   };
 
   const renderPage = () => {
@@ -41,22 +57,37 @@ export default function App() {
       case 'pricing':
         return <PricingPage onGetStarted={handleGetStarted} />;
       case 'login':
-        return <Login onLoginSuccess={handleLoginSuccess} />;
+        return <LoginPage onLogin={handleLoginSuccess} onBack={() => setCurrentPage('landing')} />;
       case 'dashboard':
         return (
           <Dashboard
             username={username}
-            licenseType={licenseType}
-            onSelectGame={() => setCurrentPage('game-selection')}
+            licenseKey={packageName}
+            onNavigate={(page) => setCurrentPage(page)}
           />
         );
-      case 'game-selection':
+      case 'games':
         return (
           <GameSelection
-            licenseType={licenseType}
-            onBack={() => setCurrentPage('dashboard')}
+            username={username}
+            packageName={packageName}
+            onSelectGame={handleSelectGame}
+            onLogout={handleLogout}
+            onBackToDashboard={() => setCurrentPage('dashboard')}
           />
         );
+      case 'game-optimizer':
+        return (
+          <GameSpecificOptimizer
+            gameName={selectedGame}
+            packageName={packageName}
+            onBack={() => setCurrentPage('games')}
+          />
+        );
+      case 'settings':
+        return <Settings onBack={() => setCurrentPage('dashboard')} />;
+      case 'history':
+        return <History onBack={() => setCurrentPage('dashboard')} />;
       default:
         return <LandingPage onGetStarted={handleGetStarted} />;
     }
@@ -66,13 +97,10 @@ export default function App() {
     <div className="min-h-screen w-full flex flex-col bg-black">
       {currentPage !== 'landing' && <Snowflakes />}
       <Navbar
-        onNavigate={(page) => setCurrentPage(page as Page)}
-        currentPage={currentPage}
+        onNavigate={handleNavigate}
         isLoggedIn={isLoggedIn}
-        onLogout={handleLogout}
       />
       <main className="flex-1 w-full pt-16">{renderPage()}</main>
-      {!isLoggedIn && <Footer />}
     </div>
   );
 }
