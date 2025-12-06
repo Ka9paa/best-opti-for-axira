@@ -9,8 +9,9 @@ import { GameSpecificOptimizer } from './components/GameSpecificOptimizer';
 import History from './components/History';
 import Settings from './components/Settings';
 import { Snowflakes } from './components/Snowflakes';
+import { AdminPanel } from './components/AdminPanel';
 
-type Page = 'landing' | 'pricing' | 'login' | 'dashboard' | 'games' | 'game-optimizer' | 'settings' | 'history';
+type Page = 'landing' | 'pricing' | 'login' | 'dashboard' | 'games' | 'game-optimizer' | 'settings' | 'history' | 'admin';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>('landing');
@@ -88,6 +89,8 @@ export default function App() {
         return <Settings onBack={() => setCurrentPage('dashboard')} />;
       case 'history':
         return <History onBack={() => setCurrentPage('dashboard')} />;
+      case 'admin':
+        return <AdminPanel currentUsername={username} onLogout={handleLogout} onBack={() => setCurrentPage('dashboard')} />;
       default:
         return <LandingPage onNavigate={(page) => setCurrentPage(page)} />;
     }
@@ -103,4 +106,17 @@ export default function App() {
       <main className="flex-1 w-full pt-16">{renderPage()}</main>
     </div>
   );
+}
+```
+
+---
+
+2. `/components/AdminPanel.tsx` - This file is HUGE, but it's already correct in your local version
+
+Just make sure line 64-68 looks like this:
+```typescript
+interface AdminPanelProps {
+  currentUsername: string;
+  onLogout: () => void;
+  onBack?: () => void;
 }
