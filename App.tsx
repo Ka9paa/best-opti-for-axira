@@ -80,8 +80,8 @@ export default function App() {
       case 'game-optimizer':
         return (
           <GameSpecificOptimizer
-            gameName={selectedGame}
-            packageName={packageName}
+            game={selectedGame}
+            packageId={packageName}
             onBack={() => setCurrentPage('games')}
           />
         );
