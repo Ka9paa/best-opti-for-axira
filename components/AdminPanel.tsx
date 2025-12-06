@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Shield, Users, Key, Search, Plus, X, Edit2, Ban, UserCheck, Clock, Package, RefreshCw, Unlock, AlertTriangle, Eye, EyeOff } from 'lucide-react';
 import { resetUserHWID } from '../utils/deviceFingerprint';
+import axiraLogo from 'figma:asset/49b79875c32406da7a3245e6357173d52dacb9ff.png';
 
 // Admin utilities - these would normally be in a separate file
 // For web version, storing in localStorage (in production, use a real backend/database)
@@ -287,31 +288,42 @@ export function AdminPanel({ currentUsername, onLogout, onBack }: AdminPanelProp
     <div className="min-h-screen bg-black text-white relative">
       {/* Notification Box */}
       {notification && (
-        <div className={`fixed top-6 right-6 z-[9999] min-w-[400px] max-w-md p-5 rounded-xl border backdrop-blur-xl shadow-2xl animate-in slide-in-from-top duration-300 ${
+        <div className={`fixed top-6 right-6 z-[9999] min-w-[420px] max-w-md rounded-xl border backdrop-blur-xl shadow-2xl animate-in slide-in-from-top duration-300 overflow-hidden ${
           notification.type === 'success' ? 'bg-green-500/20 border-green-500/50' :
           notification.type === 'error' ? 'bg-red-500/20 border-red-500/50' :
           'bg-blue-500/20 border-blue-500/50'
         }`}>
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                {notification.type === 'success' && <span className="text-2xl">✅</span>}
-                {notification.type === 'error' && <span className="text-2xl">❌</span>}
-                {notification.type === 'info' && <span className="text-2xl">ℹ️</span>}
-                <h3 className={`text-lg ${
-                  notification.type === 'success' ? 'text-green-400' :
-                  notification.type === 'error' ? 'text-red-400' :
-                  'text-blue-400'
-                }`}>{notification.title}</h3>
-              </div>
-              <p className="text-white text-sm whitespace-pre-line leading-relaxed">{notification.message}</p>
+          {/* Header with Logo */}
+          <div className="bg-gray-900/95 px-4 py-2.5 border-b border-white/10 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <img src={axiraLogo} alt="Axira Logo" className="w-5 h-5" />
+              <span className="text-white text-sm">Axira Optimizations</span>
             </div>
             <button
               onClick={() => setNotification(null)}
               className="text-gray-400 hover:text-white transition-colors"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
+          </div>
+          
+          {/* Content */}
+          <div className="p-5">
+            <div className="flex items-start gap-3">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  {notification.type === 'success' && <span className="text-2xl">✅</span>}
+                  {notification.type === 'error' && <span className="text-2xl">❌</span>}
+                  {notification.type === 'info' && <span className="text-2xl">ℹ️</span>}
+                  <h3 className={`text-lg ${
+                    notification.type === 'success' ? 'text-green-400' :
+                    notification.type === 'error' ? 'text-red-400' :
+                    'text-blue-400'
+                  }`}>{notification.title}</h3>
+                </div>
+                <p className="text-white text-sm whitespace-pre-line leading-relaxed">{notification.message}</p>
+              </div>
+            </div>
           </div>
         </div>
       )}
