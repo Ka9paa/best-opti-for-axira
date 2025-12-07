@@ -25,7 +25,7 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
   const ctaAnim = useScrollAnimation();
 
   return (
-    <div className="min-h-screen bg-black text-white scroll-smooth w-full flex flex-col items-center">
+    <div className="min-h-screen bg-black text-white scroll-smooth w-full">
       <Snowflakes />
       
       {/* MASSIVE CHRISTMAS BANNER - BLUE THEME */}
@@ -34,7 +34,7 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
       </div>
       
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-24">
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-24 w-full">
         {/* Background Effects */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {/* Grid */}
@@ -118,8 +118,8 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="relative py-32 px-6 w-full">
-        <div className="max-w-7xl mx-auto w-full">
+      <section id="features" className="relative py-32 px-6">
+        <div className="max-w-7xl mx-auto">
           <div 
             ref={featuresAnim.ref}
             className={`text-center mb-20 transition-all duration-1000 ${
@@ -149,7 +149,7 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
               </div>
               <h3 className="text-2xl mb-4">Maximum FPS</h3>
               <p className="text-gray-400">
-                Unlock your system's full potential with optimized power settings, disabled background services, and game-specific configurations.
+                Unlock your system&apos;s full potential with optimized power settings, disabled background services, and game-specific configurations.
               </p>
             </div>
 
@@ -193,8 +193,8 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
       </section>
 
       {/* Supported Games - Infinite Scroll */}
-      <section id="games" className="relative py-32 px-6 bg-white/[0.02] overflow-hidden w-full">
-        <div className="max-w-7xl mx-auto w-full">
+      <section id="games" className="relative py-32 px-6 bg-white/[0.02] overflow-hidden">
+        <div className="max-w-7xl mx-auto">
           <div 
             ref={gamesAnim.ref}
             className={`text-center mb-20 transition-all duration-1000 ${
@@ -279,8 +279,8 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
       </section>
 
       {/* How It Works */}
-      <section id="how-it-works" className="relative py-32 px-6 w-full">
-        <div className="max-w-5xl mx-auto w-full">
+      <section id="how-it-works" className="relative py-32 px-6">
+        <div className="max-w-5xl mx-auto">
           <div 
             ref={howItWorksAnim.ref}
             className={`text-center mb-20 transition-all duration-1000 ${
@@ -342,8 +342,8 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
       </section>
 
       {/* CTA Section */}
-      <section id="cta" className="relative py-32 px-6 w-full">
-        <div className="max-w-4xl mx-auto text-center w-full">
+      <section id="cta" className="relative py-32 px-6">
+        <div className="max-w-4xl mx-auto text-center">
           <div 
             ref={ctaAnim.ref}
             className={`bg-gradient-to-br from-blue-500/10 to-cyan-500/10 backdrop-blur-xl rounded-3xl p-12 border border-blue-500/20 transition-all duration-1000 ${
@@ -354,7 +354,7 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
           >
             <h2 className="text-5xl md:text-6xl mb-6">Ready to Optimize?</h2>
             <p className="text-gray-400 text-lg mb-10 max-w-2xl mx-auto">
-              Join thousands of gamers who have unlocked their PC's full potential with Axira Optimizer.
+              Join thousands of gamers who have unlocked their PC&apos;s full potential with Axira Optimizer.
             </p>
             <button
               onClick={() => onNavigate('login')}
