@@ -25,7 +25,7 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
   const ctaAnim = useScrollAnimation();
 
   return (
-    <div className="min-h-screen bg-black text-white scroll-smooth">
+    <div className="min-h-screen bg-black text-white scroll-smooth w-full">
       <Snowflakes />
       
       {/* MASSIVE CHRISTMAS BANNER - BLUE THEME */}
@@ -72,14 +72,20 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <button
-              onClick={() => onNavigate('login')}
+              onClick={() => {
+                console.log('GET STARTED BUTTON CLICKED!');
+                onNavigate('login');
+              }}
               className="px-8 py-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-full hover:from-blue-600 hover:to-cyan-600 transition-all duration-500 shadow-lg shadow-blue-500/50 hover:shadow-blue-500/70 hover:scale-[1.02] flex items-center gap-2 text-lg group"
             >
               Get Started
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
             </button>
             <button
-              onClick={() => onNavigate('pricing')}
+              onClick={() => {
+                console.log('VIEW PRICING BUTTON CLICKED!');
+                onNavigate('pricing');
+              }}
               className="px-8 py-4 bg-white/5 border border-white/10 text-white rounded-full hover:bg-white/10 hover:border-cyan-400/30 transition-all duration-500 flex items-center gap-2 text-lg hover:scale-[1.02]"
             >
               View Pricing
@@ -112,8 +118,8 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="relative py-32 px-6">
-        <div className="max-w-7xl mx-auto">
+      <section id="features" className="relative py-32 px-6 w-full">
+        <div className="max-w-7xl mx-auto w-full">
           <div 
             ref={featuresAnim.ref}
             className={`text-center mb-20 transition-all duration-1000 ${
@@ -187,8 +193,8 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
       </section>
 
       {/* Supported Games - Infinite Scroll */}
-      <section id="games" className="relative py-32 px-6 bg-white/[0.02] overflow-hidden">
-        <div className="max-w-7xl mx-auto">
+      <section id="games" className="relative py-32 px-6 bg-white/[0.02] overflow-hidden w-full">
+        <div className="max-w-7xl mx-auto w-full">
           <div 
             ref={gamesAnim.ref}
             className={`text-center mb-20 transition-all duration-1000 ${
@@ -273,8 +279,8 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
       </section>
 
       {/* How It Works */}
-      <section id="how-it-works" className="relative py-32 px-6">
-        <div className="max-w-5xl mx-auto">
+      <section id="how-it-works" className="relative py-32 px-6 w-full">
+        <div className="max-w-5xl mx-auto w-full">
           <div 
             ref={howItWorksAnim.ref}
             className={`text-center mb-20 transition-all duration-1000 ${
@@ -336,8 +342,8 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
       </section>
 
       {/* CTA Section */}
-      <section id="cta" className="relative py-32 px-6">
-        <div className="max-w-4xl mx-auto text-center">
+      <section id="cta" className="relative py-32 px-6 w-full">
+        <div className="max-w-4xl mx-auto text-center w-full">
           <div 
             ref={ctaAnim.ref}
             className={`bg-gradient-to-br from-blue-500/10 to-cyan-500/10 backdrop-blur-xl rounded-3xl p-12 border border-blue-500/20 transition-all duration-1000 ${
