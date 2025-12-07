@@ -51,7 +51,7 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
           <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
         </div>
 
-        <div className="relative z-10 max-w-6xl mx-auto px-6 py-32 text-center">
+        <div className="relative z-10 max-w-6xl mx-auto px-6 py-32 text-center w-full">
           {/* Logo */}
           <div className="inline-flex items-center justify-center w-32 h-32 mb-8 relative">
             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/30 to-cyan-500/30 rounded-2xl blur-2xl animate-pulse"></div>
@@ -118,8 +118,8 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="relative py-32 px-6">
-        <div className="max-w-7xl mx-auto">
+      <section id="features" className="relative py-32 px-6 w-full flex justify-center">
+        <div className="max-w-7xl w-full">
           <div 
             ref={featuresAnim.ref}
             className={`text-center mb-20 transition-all duration-1000 ${
@@ -134,7 +134,7 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-8 w-full">
             {/* Feature 1 */}
             <div 
               className={`bg-white/5 backdrop-blur-xl rounded-3xl p-8 border border-white/10 hover:border-blue-500/30 transition-all duration-700 group hover:scale-[1.02] ${
@@ -193,8 +193,8 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
       </section>
 
       {/* Supported Games - Infinite Scroll */}
-      <section id="games" className="relative py-32 px-6 bg-white/[0.02] overflow-hidden">
-        <div className="max-w-7xl mx-auto">
+      <section id="games" className="relative py-32 px-6 bg-white/[0.02] overflow-hidden w-full flex justify-center">
+        <div className="max-w-7xl w-full">
           <div 
             ref={gamesAnim.ref}
             className={`text-center mb-20 transition-all duration-1000 ${
@@ -279,8 +279,8 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
       </section>
 
       {/* How It Works */}
-      <section id="how-it-works" className="relative py-32 px-6">
-        <div className="max-w-5xl mx-auto">
+      <section id="how-it-works" className="relative py-32 px-6 w-full flex justify-center">
+        <div className="max-w-5xl w-full">
           <div 
             ref={howItWorksAnim.ref}
             className={`text-center mb-20 transition-all duration-1000 ${
@@ -342,8 +342,8 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
       </section>
 
       {/* CTA Section */}
-      <section id="cta" className="relative py-32 px-6">
-        <div className="max-w-4xl mx-auto text-center">
+      <section id="cta" className="relative py-32 px-6 w-full flex justify-center">
+        <div className="max-w-4xl w-full">
           <div 
             ref={ctaAnim.ref}
             className={`bg-gradient-to-br from-blue-500/10 to-cyan-500/10 backdrop-blur-xl rounded-3xl p-12 border border-blue-500/20 transition-all duration-1000 ${
@@ -368,8 +368,8 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-white/5 py-8 px-6">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+      <footer className="border-t border-white/5 py-8 px-6 w-full flex justify-center">
+        <div className="max-w-7xl flex flex-col md:flex-row items-center justify-between gap-4 w-full">
           <div className="flex items-center gap-3">
             <Logo size="sm" className="!w-6 !h-6" />
             <span className="text-gray-400">© 2024 Axira Optimizer. All rights reserved.</span>
