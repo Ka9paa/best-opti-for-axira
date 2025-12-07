@@ -25,7 +25,7 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
   const ctaAnim = useScrollAnimation();
 
   return (
-    <div className="min-h-screen bg-black text-white scroll-smooth w-full">
+    <div className="min-h-screen bg-black text-white scroll-smooth w-full flex flex-col items-center">
       <Snowflakes />
       
       {/* MASSIVE CHRISTMAS BANNER - BLUE THEME */}
