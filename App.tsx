@@ -103,7 +103,7 @@ export default function App() {
         onNavigate={handleNavigate}
         isLoggedIn={isLoggedIn}
       />
-      <main className="w-full pt-16">{renderPage()}</main>
+      <main className="w-full">{renderPage()}</main>
     </div>
   );
 }
