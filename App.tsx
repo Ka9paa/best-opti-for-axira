@@ -99,10 +99,12 @@ export default function App() {
   return (
     <div className="min-h-screen w-full bg-black">
       {currentPage !== 'landing' && <Snowflakes />}
-      <Navbar
-        onNavigate={handleNavigate}
-        isLoggedIn={isLoggedIn}
-      />
+      {currentPage !== 'landing' && (
+        <Navbar
+          onNavigate={handleNavigate}
+          isLoggedIn={isLoggedIn}
+        />
+      )}
       <main className="w-full">{renderPage()}</main>
     </div>
   );
