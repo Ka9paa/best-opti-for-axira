@@ -99,10 +99,13 @@ export default function App() {
   return (
     <div className="min-h-screen w-full bg-black">
       {currentPage !== 'landing' && <Snowflakes />}
-      <Navbar
-        onNavigate={handleNavigate}
-        isLoggedIn={isLoggedIn}
-      />
+      {/* Only show Navbar on landing, pricing, and login pages */}
+      {(currentPage === 'landing' || currentPage === 'pricing' || currentPage === 'login') && (
+        <Navbar
+          onNavigate={handleNavigate}
+          isLoggedIn={isLoggedIn}
+        />
+      )}
       <main className="w-full">{renderPage()}</main>
     </div>
   );
