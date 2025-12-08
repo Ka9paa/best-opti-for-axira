@@ -1,869 +1,253 @@
 import { useState, useEffect } from 'react';
-import { Shield, Users, Key, Search, Plus, X, Edit2, Ban, UserCheck, Clock, Package, RefreshCw, Unlock, AlertTriangle, Eye, EyeOff } from 'lucide-react';
-import { resetUserHWID } from '../utils/deviceFingerprint';
+import { Shield, Users, Key, Search, Ban, UserCheck, Edit2, Plus, X, RotateCcw } from 'lucide-react';
 
-// Admin utilities - these would normally be in a separate file
-// For web version, storing in localStorage (in production, use a real backend/database)
-const saveKeyNotes = (key: string, notes: string) => {
-  const allNotes = getAllKeyNotes();
-  allNotes[key] = notes;
-  localStorage.setItem('admin_key_notes', JSON.stringify(allNotes));
-};
-
-const getKeyNotes = (key: string): string => {
-  const allNotes = getAllKeyNotes();
-  return allNotes[key] || '';
-};
-
-const getAllKeyNotes = (): Record<string, string> => {
-  const notes = localStorage.getItem('admin_key_notes');
-  return notes ? JSON.parse(notes) : {};
-};
-
-const banUser = (username: string) => {
-  const banned = JSON.parse(localStorage.getItem('banned_users') || '[]');
-  if (!banned.includes(username)) {
-    banned.push(username);
-    localStorage.setItem('banned_users', JSON.stringify(banned));
-  }
-};
-
-const unbanUser = (username: string) => {
-  const banned = JSON.parse(localStorage.getItem('banned_users') || '[]');
-  const filtered = banned.filter((u: string) => u !== username);
-  localStorage.setItem('banned_users', JSON.stringify(filtered));
-};
-
-const fetchAllUsers = async () => {
-  // Load real users from localStorage
-  const savedUsers = localStorage.getItem('optiaxira_users');
-  if (savedUsers) {
-    const users = JSON.parse(savedUsers);
-    console.log('📊 Loaded users from localStorage:', users);
-    return users;
-  }
-  return [];
-};
-
-// IMPORTANT: Change this to YOUR username (the owner)
-const OWNER_USERNAME = "deccc"; // ✅ Owner username set!
-
-interface KeyData {
-  key: string;
+interface AdminPanelProps {
   username: string;
+  onBack: () => void;
+}
+
+interface UserData {
+  username: string;
+  key: string;
   packageTier: string;
   registeredDate: string;
   lastLogin: string;
-  notes: string; // Custom notes to identify the real person
+  notes: string;
   status: 'active' | 'banned';
+  expiryDate: string;
   hwid?: string;
-  ip?: string;
-  expiry?: string;
+  hwidLocked?: boolean;
+  lastIP?: string;
+  loginAttempts?: Array<{
+    timestamp: string;
+    status: string;
+    ip: string;
+    hwid: string;
+  }>;
+  totalLogins?: number;
 }
 
-interface AdminPanelProps {
-  currentUsername: string;
-  onLogout: () => void;
-  onBack?: () => void;
-}
-
-export function AdminPanel({ currentUsername, onLogout, onBack }: AdminPanelProps) {
-  const [activeTab, setActiveTab] = useState<'keys' | 'users' | 'admins'>('users');
+export function AdminPanel({ username, onBack }: AdminPanelProps) {
+  const [activeTab, setActiveTab] = useState<'users' | 'admins'>('users');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isOwner, setIsOwner] = useState(false);
+  const [userData, setUserData] = useState<UserData[]>([]);
   const [adminList, setAdminList] = useState<string[]>([]);
   const [newAdminUsername, setNewAdminUsername] = useState('');
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [editNotes, setEditNotes] = useState('');
-  const [keyData, setKeyData] = useState<KeyData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [visiblePasswords, setVisiblePasswords] = useState<Set<string>>(new Set());
-  const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'info'; title: string; message: string } | null>(null);
-  const [confirmDialog, setConfirmDialog] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
 
-  const isOwner = currentUsername.toLowerCase() === OWNER_USERNAME.toLowerCase();
-
-  // Show notification
-  const showNotification = (type: 'success' | 'error' | 'info', title: string, message: string) => {
-    setNotification({ type, title, message });
-    setTimeout(() => setNotification(null), 5000); // Auto-dismiss after 5 seconds
-  };
-
-  // Toggle password visibility
-  const togglePasswordVisibility = (username: string) => {
-    setVisiblePasswords(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(username)) {
-        newSet.delete(username);
-      } else {
-        newSet.add(username);
-      }
-      return newSet;
-    });
-  };
-
-  // Load users from KeyAuth on mount
+  // Check if current user is owner
   useEffect(() => {
-    loadUsers();
-  }, []);
-
-  // Load users from KeyAuth API
-  const loadUsers = async () => {
-    setIsLoading(true);
-    setErrorMessage('');
-    try {
-      console.log('🔄 Loading users from KeyAuth...');
-      const users = await fetchAllUsers();
-      
-      console.log('📊 Received users:', users);
-      
-      if (users.length === 0) {
-        setErrorMessage('');
-        // Show setup instructions instead
-      } else {
-        setErrorMessage('');
-      }
-      
-      // Load saved notes from localStorage
-      const savedNotes = getAllKeyNotes();
-      
-      // Merge KeyAuth data with saved notes
-      const usersWithNotes = users.map(user => ({
-        ...user,
-        notes: savedNotes[user.key] || user.notes || ''
-      }));
-      
-      setKeyData(usersWithNotes);
-      console.log(`✅ Loaded ${users.length} users from KeyAuth`);
-    } catch (error) {
-      console.error('❌ Failed to load users:', error);
-      setErrorMessage('');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Load admin list from localStorage
-  useEffect(() => {
-    const savedAdmins = localStorage.getItem('admin_whitelist');
+    const owner = username.toLowerCase() === 'deccc';
+    setIsOwner(owner);
+    
+    // Load admin list
+    const savedAdmins = localStorage.getItem('axira_admins');
     if (savedAdmins) {
       setAdminList(JSON.parse(savedAdmins));
     }
+  }, [username]);
+
+  // Load user data from localStorage
+  useEffect(() => {
+    const savedUsers = localStorage.getItem('optiaxira_users');
+    if (savedUsers) {
+      const users = JSON.parse(savedUsers);
+      setUserData(users);
+      console.log('📊 Loaded users from localStorage:', users);
+    }
   }, []);
 
-  // Save admin list to localStorage
-  const saveAdminList = (newList: string[]) => {
-    setAdminList(newList);
-    localStorage.setItem('admin_whitelist', JSON.stringify(newList));
+  const getTierColor = (tier: string) => {
+    if (tier.includes('ELITE')) return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
+    if (tier.includes('FOUNDATION')) return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+    if (tier.includes('CHECKUP')) return 'bg-green-500/20 text-green-400 border-green-500/30';
+    return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
   };
 
-  // Add admin (owner only)
-  const handleAddAdmin = () => {
-    if (!isOwner) {
-      showNotification('error', 'Permission Denied', 'Only the owner can add admins!');
-      return;
-    }
-
-    if (!newAdminUsername.trim()) {
-      showNotification('error', 'Invalid Input', 'Please enter a username');
-      return;
-    }
-
-    // ✅ CHECK IF USER EXISTS IN DATABASE
+  const handleToggleBan = (targetUsername: string) => {
     const savedUsers = localStorage.getItem('optiaxira_users');
-    if (!savedUsers) {
-      showNotification('error', 'No Users Found', 'No users found in the database. This user has never logged in.');
-      return;
-    }
-
-    const users = JSON.parse(savedUsers);
-    const userExists = users.find((u: any) => u.username.toLowerCase() === newAdminUsername.toLowerCase());
-
-    if (!userExists) {
-      showNotification('error', 'USER NOT FOUND', `"${newAdminUsername}" has never logged in to Axira Optimizer. Only users who have created an account and logged in can be made admins.`);
-      return;
-    }
-
-    if (adminList.includes(newAdminUsername.toLowerCase())) {
-      showNotification('info', 'Already Exists', 'This user is already an admin');
-      return;
-    }
-
-    saveAdminList([...adminList, newAdminUsername.toLowerCase()]);
-    setNewAdminUsername('');
-    showNotification('success', '✅ Admin Added Successfully!', `${newAdminUsername} is now an admin!\n• Package: ${userExists.packageTier}\n• Last Login: ${userExists.lastLogin}\n• Total Logins: ${userExists.totalLogins || 0}`);
-  };
-
-  // Remove admin (owner only)
-  const handleRemoveAdmin = (username: string) => {
-    if (!isOwner) {
-      showNotification('error', 'Permission Denied', 'Only the owner can remove admins!');
-      return;
-    }
-
-    saveAdminList(adminList.filter(admin => admin !== username));
-    showNotification('success', 'Admin Removed', `${username} has been removed from the admin list`);
-  };
-
-  // Update key notes
-  const handleSaveNotes = (key: string) => {
-    // Save to localStorage
-    saveKeyNotes(key, editNotes);
-    
-    // Update local state
-    setKeyData(prevData =>
-      prevData.map(item =>
-        item.key === key ? { ...item, notes: editNotes } : item
-      )
-    );
-    setEditingKey(null);
-    setEditNotes('');
-    showNotification('success', 'Notes Saved', 'Your notes have been saved successfully!');
-  };
-
-  // Ban/Unban user
-  const handleToggleBan = (username: string) => {
-    const savedUsers = localStorage.getItem('optiaxira_users');
-    if (!savedUsers) return;
-
-    const users = JSON.parse(savedUsers);
-    const userIndex = users.findIndex((u: any) => u.username === username);
-
-    if (userIndex !== -1) {
-      const newStatus = users[userIndex].status === 'active' ? 'banned' : 'active';
-      users[userIndex].status = newStatus;
-      localStorage.setItem('optiaxira_users', JSON.stringify(users));
+    if (savedUsers) {
+      const users = JSON.parse(savedUsers);
+      const userIndex = users.findIndex((u: any) => u.username === targetUsername);
       
-      // Update local state
-      setKeyData(users);
-      
-      showNotification(
-        newStatus === 'banned' ? 'success' : 'info',
-        newStatus === 'banned' ? '🚫 User Banned' : '✅ User Unbanned',
-        `${username} has been ${newStatus === 'banned' ? 'BANNED' : 'UNBANNED'} successfully!`
-      );
-    }
-  };
-
-  // Reset HWID
-  const handleResetHWID = (username: string) => {
-    setConfirmDialog({
-      title: '⚠️ Reset HWID?',
-      message: `Reset HWID for ${username}?\n\nThis will allow them to login from a new device.`,
-      onConfirm: () => {
-        resetUserHWID(username);
-        loadUsers();
-        showNotification('success', '✅ HWID Reset Complete', `${username} can now login from a new device!`);
-        setConfirmDialog(null);
+      if (userIndex !== -1) {
+        users[userIndex].status = users[userIndex].status === 'banned' ? 'active' : 'banned';
+        localStorage.setItem('optiaxira_users', JSON.stringify(users));
+        setUserData(users);
+        alert(`User ${targetUsername} ${users[userIndex].status === 'banned' ? 'banned' : 'unbanned'} successfully!`);
       }
-    });
+    }
   };
 
-  // Filter keys based on search
-  const filteredKeys = keyData.filter(
+  const handleResetHWID = (targetUsername: string) => {
+    const savedUsers = localStorage.getItem('optiaxira_users');
+    if (savedUsers) {
+      const users = JSON.parse(savedUsers);
+      const userIndex = users.findIndex((u: any) => u.username === targetUsername);
+      
+      if (userIndex !== -1) {
+        users[userIndex].hwid = null;
+        users[userIndex].hwidLocked = false;
+        localStorage.setItem('optiaxira_users', JSON.stringify(users));
+        setUserData(users);
+        alert(`HWID lock reset for ${targetUsername}! They can now login from any device.`);
+      }
+    }
+  };
+
+  const handleSaveNotes = (key: string) => {
+    const savedUsers = localStorage.getItem('optiaxira_users');
+    if (savedUsers) {
+      const users = JSON.parse(savedUsers);
+      const userIndex = users.findIndex((u: any) => u.key === key);
+      
+      if (userIndex !== -1) {
+        users[userIndex].notes = editNotes;
+        localStorage.setItem('optiaxira_users', JSON.stringify(users));
+        setUserData(users);
+        setEditingKey(null);
+        alert('Notes saved successfully!');
+      }
+    }
+  };
+
+  const handleAddAdmin = () => {
+    const usernameToAdd = newAdminUsername.trim();
+    
+    if (!usernameToAdd) {
+      alert('Please enter a username');
+      return;
+    }
+
+    // Check if user exists in localStorage
+    const savedUsers = localStorage.getItem('optiaxira_users');
+    if (savedUsers) {
+      const users = JSON.parse(savedUsers);
+      const userExists = users.some((u: any) => u.username.toLowerCase() === usernameToAdd.toLowerCase());
+      
+      if (!userExists) {
+        alert(`❌ USER NOT FOUND\n\n"${usernameToAdd}" has never logged in to Axira Optimizer. Only users who have created an account and logged in can be made admins.\n\nRegistered users:\n${users.map((u: any) => '• ' + u.username).join('\n')}`);
+        return;
+      }
+    } else {
+      alert('❌ No users have registered yet!');
+      return;
+    }
+
+    // Check if already an admin
+    if (adminList.includes(usernameToAdd)) {
+      alert(`${usernameToAdd} is already an admin!`);
+      return;
+    }
+
+    // Check if trying to add owner
+    if (usernameToAdd.toLowerCase() === 'deccc') {
+      alert('deccc is the owner and already has full admin privileges!');
+      return;
+    }
+
+    // Add to admin list
+    const updatedAdmins = [...adminList, usernameToAdd];
+    setAdminList(updatedAdmins);
+    localStorage.setItem('axira_admins', JSON.stringify(updatedAdmins));
+    setNewAdminUsername('');
+    alert(`✅ ${usernameToAdd} has been granted admin access!`);
+  };
+
+  const handleRemoveAdmin = (adminUsername: string) => {
+    if (confirm(`Remove ${adminUsername} from admin list?`)) {
+      const updatedAdmins = adminList.filter(a => a !== adminUsername);
+      setAdminList(updatedAdmins);
+      localStorage.setItem('axira_admins', JSON.stringify(updatedAdmins));
+      alert(`${adminUsername} has been removed from admins.`);
+    }
+  };
+
+  // Filter users based on search
+  const filteredUsers = userData.filter(
     item =>
       (item.key?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
       (item.username?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
       (item.notes?.toLowerCase() || '').includes(searchQuery.toLowerCase())
   );
-  
-  console.log('🔍 keyData:', keyData);
-  console.log('🔍 filteredKeys:', filteredKeys);
-  console.log('🔍 searchQuery:', searchQuery);
-
-  // Package tier colors
-  const getTierColor = (tier: string) => {
-    const colors: Record<string, string> = {
-      ELITE: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-      OCBUNDLE: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-      FOUNDATION: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-      STREAM: 'bg-pink-500/20 text-pink-400 border-pink-500/30',
-      DUALPC: 'bg-green-500/20 text-green-400 border-green-500/30',
-      CPUOC: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
-      RAMOC: 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30',
-      CHECKUP: 'bg-gray-500/20 text-gray-400 border-gray-500/30'
-    };
-    return colors[tier] || colors.CHECKUP;
-  };
 
   return (
-    <div className="min-h-screen bg-black text-white relative">
-      {/* Notification Box */}
-      {notification && (
-        <div className={`fixed top-6 right-6 z-[9999] min-w-[420px] max-w-md rounded-xl border backdrop-blur-xl shadow-2xl animate-in slide-in-from-top duration-300 overflow-hidden ${
-          notification.type === 'success' ? 'bg-green-500/20 border-green-500/50' :
-          notification.type === 'error' ? 'bg-red-500/20 border-red-500/50' :
-          'bg-blue-500/20 border-blue-500/50'
-        }`}>
-          {/* Header with Logo */}
-          <div className="bg-gray-900/95 px-4 py-2.5 border-b border-white/10 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <img src="/axira-logo.png" alt="Axira Logo" className="w-5 h-5 rounded" />
-              <span className="text-white text-sm">Axira Optimizations</span>
-            </div>
-            <button
-              onClick={() => setNotification(null)}
-              className="text-gray-400 hover:text-white transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-          
-          {/* Content */}
-          <div className="p-5">
-            <div className="flex items-start gap-3">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  {notification.type === 'success' && <span className="text-2xl">✅</span>}
-                  {notification.type === 'error' && <span className="text-2xl">❌</span>}
-                  {notification.type === 'info' && <span className="text-2xl">ℹ️</span>}
-                  <h3 className={`text-lg ${
-                    notification.type === 'success' ? 'text-green-400' :
-                    notification.type === 'error' ? 'text-red-400' :
-                    'text-blue-400'
-                  }`}>{notification.title}</h3>
-                </div>
-                <p className="text-white text-sm whitespace-pre-line leading-relaxed">{notification.message}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Confirm Dialog */}
-      {confirmDialog && (
-        <div className="fixed top-0 left-0 right-0 bottom-0 bg-black/50 flex items-center justify-center z-[9999]">
-          <div className="bg-gray-900/80 backdrop-blur-xl rounded-2xl p-8 border border-blue-500/30 max-w-md w-full">
-            <h3 className="text-white text-xl mb-4">{confirmDialog.title}</h3>
-            <p className="text-gray-400 text-sm mb-6">{confirmDialog.message}</p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setConfirmDialog(null)}
-                className="px-4 py-2 bg-gray-500/20 text-gray-400 rounded-lg hover:bg-gray-500/30 transition-all border border-gray-500/30"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDialog.onConfirm}
-                className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-all border border-red-500/30"
-              >
-                Confirm
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="p-8">
+    <div className="min-h-screen bg-black p-8">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-gray-900/80 backdrop-blur-xl rounded-2xl p-6 border border-blue-500/30 mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="bg-blue-500/20 p-3 rounded-lg">
-                <Shield className="w-8 h-8 text-blue-400" />
-              </div>
-              <div>
-                <h1 className="text-white text-2xl">Admin Panel</h1>
-                <p className="text-gray-400 text-sm">
-                  {isOwner ? '👑 Owner Access' : '🛡️ Admin Access'} • Logged in as: {currentUsername}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={onLogout}
-              className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-all border border-red-500/30"
-            >
-              Logout
-            </button>
+        <div className="mb-8">
+          <button
+            onClick={onBack}
+            className="mb-4 px-4 py-2 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 transition-all border border-blue-500/30"
+          >
+            ← Back to Dashboard
+          </button>
+          <div className="flex items-center gap-4 mb-2">
+            <Shield className="w-10 h-10 text-blue-400" />
+            <h1 className="text-white text-4xl">Admin Panel</h1>
           </div>
-
-          {/* Warning if owner username not set */}
-          {OWNER_USERNAME === "YOUR_OWNER_USERNAME_HERE" as string && (
-            <div className="mt-4 bg-red-500/20 border border-red-500/30 rounded-lg p-4">
-              <p className="text-red-400">
-                ⚠️ <strong>SETUP REQUIRED:</strong> Change OWNER_USERNAME in /components/AdminPanel.tsx to your username!
-              </p>
-            </div>
-          )}
-
-          {/* HWID Lock Info Banner */}
-          <div className="mt-4 bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-4">
-            <div className="flex items-start gap-3">
-              <Shield className="w-5 h-5 text-cyan-400 mt-0.5" />
-              <div>
-                <p className="text-cyan-400 mb-1">🔒 HWID Lock Protection Active</p>
-                <p className="text-gray-300 text-sm mb-2">
-                  All users are automatically locked to their device. They CANNOT login from another device unless you reset their HWID.
-                </p>
-                <ul className="text-gray-400 text-xs space-y-1">
-                  <li>✅ Each account is locked to a unique browser/device fingerprint</li>
-                  <li>✅ Failed login attempts from other devices are logged and blocked</li>
-                  <li>✅ You can reset HWID if user gets a new device/browser</li>
-                  <li>⚠️ Users trying to share accounts will see: "ACCOUNT LOCKED - HWID MISMATCH"</li>
-                </ul>
-              </div>
-            </div>
-          </div>
+          <p className="text-gray-400">
+            {isOwner ? '👑 Owner Access - Full Control' : '🛡️ Admin Access'}
+          </p>
         </div>
 
         {/* Tabs */}
         <div className="flex gap-4 mb-6">
           <button
             onClick={() => setActiveTab('users')}
-            className={`flex items-center gap-2 px-6 py-3 rounded-lg transition-all ${
+            className={`px-6 py-3 rounded-lg transition-all ${
               activeTab === 'users'
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-900/80 text-gray-400 hover:bg-gray-800/80'
+                ? 'bg-blue-500/30 text-white border-2 border-blue-500'
+                : 'bg-gray-800/50 text-gray-400 border border-gray-700 hover:bg-gray-800'
             }`}
           >
-            <Users className="w-5 h-5" />
-            User Management
+            <Users className="w-5 h-5 inline mr-2" />
+            User Management ({userData.length})
           </button>
-          <button
-            onClick={() => setActiveTab('keys')}
-            className={`flex items-center gap-2 px-6 py-3 rounded-lg transition-all ${
-              activeTab === 'keys'
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-900/80 text-gray-400 hover:bg-gray-800/80'
-            }`}
-          >
-            <Key className="w-5 h-5" />
-            Key Management
-          </button>
-          <button
-            onClick={() => setActiveTab('admins')}
-            className={`flex items-center gap-2 px-6 py-3 rounded-lg transition-all ${
-              activeTab === 'admins'
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-900/80 text-gray-400 hover:bg-gray-800/80'
-            }`}
-          >
-            <Shield className="w-5 h-5" />
-            Admin Management
-            {isOwner && <span className="text-xs bg-yellow-500/30 text-yellow-400 px-2 py-0.5 rounded">Owner Only</span>}
-          </button>
+          {isOwner && (
+            <button
+              onClick={() => setActiveTab('admins')}
+              className={`px-6 py-3 rounded-lg transition-all ${
+                activeTab === 'admins'
+                  ? 'bg-blue-500/30 text-white border-2 border-blue-500'
+                  : 'bg-gray-800/50 text-gray-400 border border-gray-700 hover:bg-gray-800'
+              }`}
+            >
+              <Shield className="w-5 h-5 inline mr-2" />
+              Admin Management ({adminList.length})
+            </button>
+          )}
         </div>
 
         {/* User Management Tab */}
         {activeTab === 'users' && (
           <div className="space-y-4">
-            {/* Search Bar & Stats */}
+            {/* Search Bar */}
             <div className="bg-gray-900/80 backdrop-blur-xl rounded-2xl p-4 border border-blue-500/30">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-4">
-                  <div>
-                    <p className="text-gray-400 text-sm">Total Users</p>
-                    <p className="text-white text-2xl">{keyData.length}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-400 text-sm">Active</p>
-                    <p className="text-green-400 text-2xl">{keyData.filter(k => k.status === 'active').length}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-400 text-sm">Banned</p>
-                    <p className="text-red-400 text-2xl">{keyData.filter(k => k.status === 'banned').length}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-400 text-sm">HWID Locked</p>
-                    <p className="text-cyan-400 text-2xl">{keyData.filter((k: any) => k.hwidLocked).length}</p>
-                  </div>
-                </div>
-                <button
-                  onClick={loadUsers}
-                  disabled={isLoading}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 transition-all border border-blue-500/30 disabled:opacity-50"
-                >
-                  <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-                  Refresh
-                </button>
-              </div>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <div className="flex items-center gap-3">
+                <Search className="w-5 h-5 text-gray-400" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search by username, IP, or notes..."
-                  className="w-full bg-black/50 border border-blue-500/30 rounded-lg pl-11 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                  placeholder="Search by username, license key, or notes..."
+                  className="flex-1 bg-transparent border-none text-white placeholder-gray-500 focus:outline-none"
                 />
               </div>
             </div>
 
-            {/* Users List */}
-            <div className="space-y-3">
-              {isLoading ? (
-                <div className="bg-gray-900/80 backdrop-blur-xl rounded-2xl p-8 border border-blue-500/30 text-center">
-                  <RefreshCw className="w-12 h-12 text-blue-400 mx-auto mb-4 animate-spin" />
-                  <p className="text-gray-400">Loading users...</p>
-                </div>
-              ) : keyData.length === 0 ? (
-                <div className="bg-gray-900/80 backdrop-blur-xl rounded-2xl p-8 border border-yellow-500/30 text-center">
-                  <Users className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
-                  <h3 className="text-white text-xl mb-2">No Users Yet</h3>
-                  <p className="text-gray-400">Users will appear here when they sign up or login</p>
-                </div>
-              ) : filteredKeys.length === 0 ? (
-                <div className="bg-gray-900/80 backdrop-blur-xl rounded-2xl p-8 border border-blue-500/30 text-center">
-                  <Search className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-400">No users match your search</p>
-                </div>
-              ) : (
-                filteredKeys.map((user: any) => (
-                  <div
-                    key={user.username}
-                    className={`bg-gray-900/80 backdrop-blur-xl rounded-2xl p-6 border ${
-                      user.status === 'banned' ? 'border-red-500/50' : 'border-blue-500/30'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      {/* Left Side - User Info */}
-                      <div className="flex-1 space-y-3">
-                        <div className="flex items-center gap-3">
-                          <span className={`px-3 py-1 rounded-lg border text-sm ${getTierColor(user.packageTier)}`}>
-                            {user.packageTier}
-                          </span>
-                          {user.status === 'banned' && (
-                            <span className="px-3 py-1 rounded-lg border bg-red-500/20 text-red-400 border-red-500/30 text-sm">
-                              🚫 BANNED
-                            </span>
-                          )}
-                          {user.hwidLocked && (
-                            <span className="px-3 py-1 rounded-lg border bg-cyan-500/20 text-cyan-400 border-cyan-500/30 text-sm">
-                              🔒 HWID LOCKED
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-4">
-                          <div>
-                            <p className="text-gray-400 text-xs mb-1">Username</p>
-                            <p className="text-white">{user.username}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-400 text-xs mb-1 flex items-center gap-2">
-                              Password
-                              <button
-                                onClick={() => togglePasswordVisibility(user.username)}
-                                className="text-blue-400 hover:text-blue-300 transition-colors"
-                              >
-                                {visiblePasswords.has(user.username) ? (
-                                  <EyeOff className="w-3 h-3" />
-                                ) : (
-                                  <Eye className="w-3 h-3" />
-                                )}
-                              </button>
-                            </p>
-                            <p className="text-white font-mono text-sm select-all">
-                              {visiblePasswords.has(user.username) 
-                                ? (user.password || 'Not stored') 
-                                : '••••••••'}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-gray-400 text-xs mb-1">Total Logins</p>
-                            <p className="text-white">{user.totalLogins || 0}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-400 text-xs mb-1">Last Login</p>
-                            <p className="text-white text-sm">{user.lastLogin}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-400 text-xs mb-1">Last IP</p>
-                            <p className="text-white text-sm font-mono">{user.lastIP || 'Unknown'}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-400 text-xs mb-1">HWID</p>
-                            <p className="text-white text-sm font-mono">{user.hwid ? user.hwid.substring(0, 12) + '...' : 'Not Set'}</p>
-                          </div>
-                        </div>
-
-                        {/* Login Attempts */}
-                        {/* HWID Lock Status */}
-                        <div className="bg-black/30 rounded-lg p-3 border border-cyan-500/30">
-                          <p className="text-cyan-400 text-xs mb-1 flex items-center gap-1">
-                            <Shield className="w-3 h-3" />
-                            HWID Lock Status
-                          </p>
-                          {user.hwidLocked ? (
-                            <div>
-                              <p className="text-green-400 text-sm mb-1">🔒 ENABLED - Account Protected</p>
-                              <p className="text-gray-400 font-mono text-xs">
-                                Locked HWID: {user.hwid ? user.hwid.substring(0, 16) + '...' : 'Unknown'}
-                              </p>
-                              <p className="text-gray-500 text-xs mt-1">
-                                ⚠️ User cannot login from other devices
-                              </p>
-                            </div>
-                          ) : (
-                            <p className="text-yellow-400 text-sm">🔓 DISABLED - No Protection</p>
-                          )}
-                        </div>
-
-                        {user.loginAttempts && user.loginAttempts.length > 0 && (
-                          <div>
-                            <button
-                              onClick={() => setSelectedUser(selectedUser === user.username ? null : user.username)}
-                              className="text-blue-400 text-sm hover:text-blue-300 flex items-center gap-1"
-                            >
-                              <Clock className="w-4 h-4" />
-                              View Login History ({user.loginAttempts.length})
-                              {user.loginAttempts.some((a: any) => a.status.includes('HWID MISMATCH')) && (
-                                <span className="bg-red-500/20 text-red-400 px-2 py-0.5 rounded text-xs">
-                                  ⚠️ Has failed attempts
-                                </span>
-                              )}
-                            </button>
-                            
-                            {selectedUser === user.username && (
-                              <div className="mt-2 bg-black/30 rounded-lg p-4 space-y-2 max-h-60 overflow-y-auto">
-                                {user.loginAttempts.slice().reverse().map((attempt: any, i: number) => (
-                                  <div key={i} className={`flex items-center justify-between text-sm border-b pb-2 ${
-                                    attempt.status.includes('HWID MISMATCH') ? 'border-red-500/50' : 'border-gray-700/50'
-                                  }`}>
-                                    <div>
-                                      <p className={`${
-                                        attempt.status === 'Success' ? 'text-green-400' : 
-                                        attempt.status.includes('HWID MISMATCH') ? 'text-red-500 font-bold' :
-                                        'text-red-400'
-                                      }`}>
-                                        {attempt.status}
-                                      </p>
-                                      <p className="text-gray-500 text-xs">{attempt.timestamp}</p>
-                                    </div>
-                                    <div className="text-right">
-                                      <p className="text-gray-400 font-mono text-xs">IP: {attempt.ip}</p>
-                                      <p className="text-gray-500 font-mono text-xs">HWID: {attempt.hwid}</p>
-                                      {attempt.expectedHwid && (
-                                        <p className="text-red-400 font-mono text-xs">Expected: {attempt.expectedHwid}</p>
-                                      )}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Notes Section */}
-                        <div>
-                          <div className="flex items-center gap-2 mb-2">
-                            <p className="text-gray-400 text-xs">Notes (Real Identity)</p>
-                            <button
-                              onClick={() => {
-                                setEditingKey(user.username);
-                                setEditNotes(user.notes);
-                              }}
-                              className="text-blue-400 hover:text-blue-300"
-                            >
-                              <Edit2 className="w-3 h-3" />
-                            </button>
-                          </div>
-
-                          {editingKey === user.username ? (
-                            <div className="flex gap-2">
-                              <input
-                                type="text"
-                                value={editNotes}
-                                onChange={(e) => setEditNotes(e.target.value)}
-                                placeholder="e.g. John Smith - Discord: john#1234"
-                                className="flex-1 bg-black/50 border border-blue-500/30 rounded-lg px-3 py-2 text-white text-sm"
-                              />
-                              <button
-                                onClick={() => {
-                                  const savedUsers = localStorage.getItem('optiaxira_users');
-                                  if (savedUsers) {
-                                    const users = JSON.parse(savedUsers);
-                                    const idx = users.findIndex((u: any) => u.username === user.username);
-                                    if (idx !== -1) {
-                                      users[idx].notes = editNotes;
-                                      localStorage.setItem('optiaxira_users', JSON.stringify(users));
-                                      setKeyData(users);
-                                      setEditingKey(null);
-                                      showNotification('success', 'Notes Saved', 'Your notes have been saved successfully!');
-                                    }
-                                  }
-                                }}
-                                className="px-4 py-2 bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500/30 text-sm"
-                              >
-                                Save
-                              </button>
-                              <button
-                                onClick={() => setEditingKey(null)}
-                                className="px-4 py-2 bg-gray-500/20 text-gray-400 rounded-lg hover:bg-gray-500/30 text-sm"
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          ) : (
-                            <p className="text-white text-sm bg-black/30 px-3 py-2 rounded-lg">
-                              {user.notes || <span className="text-gray-500 italic">No notes added</span>}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Right Side - Actions */}
-                      <div className="flex flex-col gap-2">
-                        <button
-                          onClick={() => handleToggleBan(user.username)}
-                          className={`px-4 py-2 rounded-lg text-sm transition-all whitespace-nowrap ${
-                            user.status === 'banned'
-                              ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30 border border-green-500/30'
-                              : 'bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30'
-                          }`}
-                        >
-                          {user.status === 'banned' ? (
-                            <>
-                              <UserCheck className="w-4 h-4 inline mr-1" />
-                              Unban
-                            </>
-                          ) : (
-                            <>
-                              <Ban className="w-4 h-4 inline mr-1" />
-                              Ban
-                            </>
-                          )}
-                        </button>
-                        
-                        {user.hwidLocked && (
-                          <button
-                            onClick={() => handleResetHWID(user.username)}
-                            className="px-4 py-2 bg-yellow-500/20 text-yellow-400 rounded-lg hover:bg-yellow-500/30 transition-all border border-yellow-500/30 text-sm whitespace-nowrap"
-                          >
-                            <Unlock className="w-4 h-4 inline mr-1" />
-                            Reset HWID
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Key Management Tab */}
-        {activeTab === 'keys' && (
-          <div className="space-y-4">
-            {/* Search Bar & Stats */}
-            <div className="bg-gray-900/80 backdrop-blur-xl rounded-2xl p-4 border border-blue-500/30">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-4">
-                  <div>
-                    <p className="text-gray-400 text-sm">Total Users</p>
-                    <p className="text-white text-2xl">{keyData.length}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-400 text-sm">Active</p>
-                    <p className="text-green-400 text-2xl">{keyData.filter(k => k.status === 'active').length}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-400 text-sm">Banned</p>
-                    <p className="text-red-400 text-2xl">{keyData.filter(k => k.status === 'banned').length}</p>
-                  </div>
-                </div>
-                <button
-                  onClick={loadUsers}
-                  disabled={isLoading}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 transition-all border border-blue-500/30 disabled:opacity-50"
-                >
-                  <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-                  Refresh
-                </button>
-              </div>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search by key, username, or notes..."
-                  className="w-full bg-black/50 border border-blue-500/30 rounded-lg pl-11 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
-                />
-              </div>
-            </div>
-
-            {/* Keys List */}
-            <div className="space-y-3">
-              {isLoading ? (
-                <div className="bg-gray-900/80 backdrop-blur-xl rounded-2xl p-8 border border-blue-500/30 text-center">
-                  <RefreshCw className="w-12 h-12 text-blue-400 mx-auto mb-4 animate-spin" />
-                  <p className="text-gray-400">Loading users from KeyAuth...</p>
-                </div>
-              ) : keyData.length === 0 ? (
-                <div className="bg-gray-900/80 backdrop-blur-xl rounded-2xl p-8 border border-yellow-500/30">
-                  <div className="text-center mb-6">
-                    <Key className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
-                    <h3 className="text-white text-xl mb-2">⚙️ Seller Key Setup Required</h3>
-                    <p className="text-gray-400 mb-6">
-                      To view all registered users, you need to configure your KeyAuth Seller Key
-                    </p>
-                  </div>
-
-                  <div className="bg-black/30 rounded-lg p-6 text-left space-y-4">
-                    <h4 className="text-white flex items-center gap-2">
-                      <span className="bg-blue-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm">1</span>
-                      Go to KeyAuth Seller Settings
-                    </h4>
-                    <p className="text-gray-400 text-sm ml-8">
-                      Visit: <a href="https://keyauth.cc/app/?page=seller-settings" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline hover:text-blue-300">
-                        https://keyauth.cc/app/?page=seller-settings
-                      </a>
-                    </p>
-
-                    <h4 className="text-white flex items-center gap-2">
-                      <span className="bg-blue-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm">2</span>
-                      Copy Your Seller Key
-                    </h4>
-                    <p className="text-gray-400 text-sm ml-8">
-                      Find the "Seller Key" field (must be exactly 32 characters long)
-                    </p>
-
-                    <h4 className="text-white flex items-center gap-2">
-                      <span className="bg-blue-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm">3</span>
-                      Update the Code
-                    </h4>
-                    <p className="text-gray-400 text-sm ml-8">
-                      Open: <code className="bg-black/50 px-2 py-1 rounded text-blue-400">/utils/adminKeyAuth.ts</code>
-                    </p>
-                    <p className="text-gray-400 text-sm ml-8">
-                      Line 15: Replace <code className="bg-black/50 px-2 py-1 rounded text-yellow-400">YOUR_SELLER_KEY_HERE</code>
-                    </p>
-                    <p className="text-gray-400 text-sm ml-8">
-                      With your actual 32-character seller key
-                    </p>
-
-                    <h4 className="text-white flex items-center gap-2">
-                      <span className="bg-blue-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm">4</span>
-                      Rebuild the App
-                    </h4>
-                    <p className="text-gray-400 text-sm ml-8">
-                      Run: <code className="bg-black/50 px-2 py-1 rounded text-green-400">AUTO-FIX-AND-BUILD.bat</code>
-                    </p>
-
-                    <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-                      <p className="text-blue-400 text-sm">
-                        💡 <strong>Note:</strong> The Seller Key is different from your App Owner ID or API Key. It must come from the Seller Settings page specifically.
-                      </p>
-                    </div>
-
-                    <div className="mt-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
-                      <p className="text-red-400 text-sm">
-                        ⚠️ <strong>Common Issue:</strong> "Seller key should be 32 characters long" means you're using the wrong key. Make sure to get it from the Seller Settings page, not the main app settings.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ) : filteredKeys.length === 0 ? (
+            {/* User List */}
+            <div className="space-y-4">
+              {filteredUsers.length === 0 ? (
                 <div className="bg-gray-900/80 backdrop-blur-xl rounded-2xl p-8 border border-blue-500/30 text-center">
                   <Search className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-400">No users match your search</p>
                   <p className="text-gray-500 text-sm mt-2">Try different keywords or clear the search</p>
                 </div>
               ) : (
-                filteredKeys.map((item) => (
+                filteredUsers.map((item) => (
                   <div
                     key={item.key}
                     className={`bg-gray-900/80 backdrop-blur-xl rounded-2xl p-6 border ${
@@ -871,7 +255,7 @@ export function AdminPanel({ currentUsername, onLogout, onBack }: AdminPanelProp
                     }`}
                   >
                     <div className="flex items-start justify-between gap-4">
-                      {/* Left Side - Key Info */}
+                      {/* Left Side - User Info */}
                       <div className="flex-1 space-y-3">
                         <div className="flex items-center gap-3">
                           <span className={`px-3 py-1 rounded-lg border text-sm ${getTierColor(item.packageTier)}`}>
@@ -900,6 +284,16 @@ export function AdminPanel({ currentUsername, onLogout, onBack }: AdminPanelProp
                           <div>
                             <p className="text-gray-400 text-xs mb-1">Last Login</p>
                             <p className="text-white text-sm">{item.lastLogin}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-400 text-xs mb-1">Total Logins</p>
+                            <p className="text-white text-sm">{item.totalLogins || 0}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-400 text-xs mb-1">HWID Status</p>
+                            <p className="text-white text-sm">
+                              {item.hwidLocked ? '🔒 Locked' : '🔓 Unlocked'}
+                            </p>
                           </div>
                         </div>
 
@@ -946,6 +340,24 @@ export function AdminPanel({ currentUsername, onLogout, onBack }: AdminPanelProp
                             </p>
                           )}
                         </div>
+
+                        {/* Login History */}
+                        {item.loginAttempts && item.loginAttempts.length > 0 && (
+                          <div>
+                            <p className="text-gray-400 text-xs mb-2">Recent Login Attempts</p>
+                            <div className="space-y-1 max-h-40 overflow-y-auto">
+                              {item.loginAttempts.slice(-5).reverse().map((attempt, idx) => (
+                                <div key={idx} className="text-xs bg-black/30 px-2 py-1 rounded">
+                                  <span className={attempt.status.includes('Success') ? 'text-green-400' : 'text-red-400'}>
+                                    {attempt.status}
+                                  </span>
+                                  <span className="text-gray-500"> • {attempt.timestamp}</span>
+                                  <span className="text-gray-500"> • IP: {attempt.ip}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       {/* Right Side - Actions */}
@@ -970,6 +382,15 @@ export function AdminPanel({ currentUsername, onLogout, onBack }: AdminPanelProp
                             </>
                           )}
                         </button>
+                        {item.hwidLocked && (
+                          <button
+                            onClick={() => handleResetHWID(item.username)}
+                            className="px-4 py-2 rounded-lg text-sm transition-all bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 border border-yellow-500/30"
+                          >
+                            <RotateCcw className="w-4 h-4 inline mr-1" />
+                            Reset HWID
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
