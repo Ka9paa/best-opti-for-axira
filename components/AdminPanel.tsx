@@ -263,10 +263,14 @@ export function AdminPanel({ currentUsername, onLogout, onBack }: AdminPanelProp
   // Filter keys based on search
   const filteredKeys = keyData.filter(
     item =>
-      item.key.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.notes.toLowerCase().includes(searchQuery.toLowerCase())
+      (item.key?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+      (item.username?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+      (item.notes?.toLowerCase() || '').includes(searchQuery.toLowerCase())
   );
+  
+  console.log('🔍 keyData:', keyData);
+  console.log('🔍 filteredKeys:', filteredKeys);
+  console.log('🔍 searchQuery:', searchQuery);
 
   // Package tier colors
   const getTierColor = (tier: string) => {
