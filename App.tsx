@@ -90,7 +90,7 @@ export default function App() {
       case 'history':
         return <History onBack={() => setCurrentPage('dashboard')} />;
       case 'admin':
-        return <AdminPanel currentUsername={username} onLogout={handleLogout} onBack={() => setCurrentPage('dashboard')} />;
+        return <AdminPanel username={username} onBack={() => setCurrentPage('dashboard')} />;
       default:
         return <LandingPage onNavigate={(page) => setCurrentPage(page)} />;
     }
