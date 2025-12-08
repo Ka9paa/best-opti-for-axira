@@ -1,4 +1,4 @@
-import { Zap, Shield, TrendingUp, Gamepad2, CheckCircle, ArrowRight, Cpu, Download, Star } from 'lucide-react';
+import { Zap, Shield, TrendingUp, Gamepad2, ArrowRight, Cpu, Download } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { Logo } from './Logo';
 import { Snowflakes } from './Snowflakes';
@@ -25,7 +25,7 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
   const ctaAnim = useScrollAnimation();
 
   return (
-    <div className="min-h-screen bg-black text-white scroll-smooth w-full">
+    <div className="min-h-screen bg-black text-white scroll-smooth w-full flex flex-col items-center">
       <Snowflakes />
       
       {/* MASSIVE CHRISTMAS BANNER - BLUE THEME */}
@@ -53,19 +53,21 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
 
         <div className="relative z-10 max-w-6xl mx-auto px-6 py-32 text-center w-full">
           {/* Logo */}
-          <div className="inline-flex items-center justify-center w-32 h-32 mb-8 relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/30 to-cyan-500/30 rounded-2xl blur-2xl animate-pulse"></div>
-            <Logo size="xl" className="w-28 h-28 relative z-10" />
+          <div className="flex justify-center mb-8">
+            <div className="relative inline-flex items-center justify-center w-32 h-32">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/30 to-cyan-500/30 rounded-2xl blur-2xl animate-pulse"></div>
+              <Logo size="xl" className="w-28 h-28 relative z-10" />
+            </div>
           </div>
 
           {/* Main Heading */}
-          <h1 className="text-7xl md:text-8xl mb-6 tracking-tight">
+          <h1 className="text-7xl md:text-8xl mb-6 tracking-tight text-center">
             Axira Optimizer ❄️
           </h1>
-          <p className="text-xl md:text-2xl text-gray-400 mb-4 max-w-3xl mx-auto">
+          <p className="text-xl md:text-2xl text-gray-400 mb-4 max-w-3xl mx-auto text-center">
             Ultimate Game Optimization Suite 🎄
           </p>
-          <p className="text-gray-500 mb-12 max-w-2xl mx-auto">
+          <p className="text-gray-500 mb-12 max-w-2xl mx-auto text-center">
             Maximize your FPS and minimize input lag across 8 popular games with 98 unique optimization tweaks. Professional-grade performance tuning at your fingertips.
           </p>
 
@@ -104,7 +106,7 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
             </div>
             <div className="text-center">
               <div className="text-4xl md:text-5xl mb-2 bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent">100%</div>
-              <div className="text-gray-400 text-sm uppercase tracking-wider">Safe & Transparent</div>
+              <div className="text-gray-400 text-sm uppercase tracking-wider">Safe &{'&'} Transparent</div>
             </div>
           </div>
         </div>
@@ -128,8 +130,8 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
                 : 'opacity-0 translate-y-10'
             }`}
           >
-            <h2 className="text-5xl md:text-6xl mb-6">Why Axira Optimizer?</h2>
-            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+            <h2 className="text-5xl md:text-6xl mb-6 text-center">Why Axira Optimizer?</h2>
+            <p className="text-gray-400 text-lg max-w-2xl mx-auto text-center">
               Professional-grade optimization tools designed for competitive gamers and performance enthusiasts.
             </p>
           </div>
@@ -137,54 +139,60 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
           <div className="grid md:grid-cols-3 gap-8 w-full">
             {/* Feature 1 */}
             <div 
-              className={`bg-white/5 backdrop-blur-xl rounded-3xl p-8 border border-white/10 hover:border-blue-500/30 transition-all duration-700 group hover:scale-[1.02] ${
+              className={`bg-white/5 backdrop-blur-xl rounded-3xl p-8 border border-white/10 hover:border-blue-500/30 transition-all duration-700 group hover:scale-[1.02] text-center ${
                 featuresAnim.isVisible 
                   ? 'opacity-100 translate-y-0' 
                   : 'opacity-0 translate-y-10'
               }`}
               style={{ transitionDelay: '100ms' }}
             >
-              <div className="w-14 h-14 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                <Zap className="w-7 h-7 text-blue-400 group-hover:text-cyan-400 transition-colors duration-300" />
+              <div className="flex justify-center mb-6">
+                <div className="w-14 h-14 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <Zap className="w-7 h-7 text-blue-400 group-hover:text-cyan-400 transition-colors duration-300" />
+                </div>
               </div>
-              <h3 className="text-2xl mb-4">Maximum FPS</h3>
-              <p className="text-gray-400">
+              <h3 className="text-2xl mb-4 text-center">Maximum FPS</h3>
+              <p className="text-gray-400 text-center">
                 Unlock your system&apos;s full potential with optimized power settings, disabled background services, and game-specific configurations.
               </p>
             </div>
 
             {/* Feature 2 */}
             <div 
-              className={`bg-white/5 backdrop-blur-xl rounded-3xl p-8 border border-white/10 hover:border-blue-500/30 transition-all duration-700 group hover:scale-[1.02] ${
+              className={`bg-white/5 backdrop-blur-xl rounded-3xl p-8 border border-white/10 hover:border-blue-500/30 transition-all duration-700 group hover:scale-[1.02] text-center ${
                 featuresAnim.isVisible 
                   ? 'opacity-100 translate-y-0' 
                   : 'opacity-0 translate-y-10'
               }`}
               style={{ transitionDelay: '200ms' }}
             >
-              <div className="w-14 h-14 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                <Shield className="w-7 h-7 text-blue-400 group-hover:text-cyan-400 transition-colors duration-300" />
+              <div className="flex justify-center mb-6">
+                <div className="w-14 h-14 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <Shield className="w-7 h-7 text-blue-400 group-hover:text-cyan-400 transition-colors duration-300" />
+                </div>
               </div>
-              <h3 className="text-2xl mb-4">100% Safe</h3>
-              <p className="text-gray-400">
+              <h3 className="text-2xl mb-4 text-center">100% Safe</h3>
+              <p className="text-gray-400 text-center">
                 Every script is fully documented and transparent. No malware, no hidden actions - just Windows registry tweaks you can review before running.
               </p>
             </div>
 
             {/* Feature 3 */}
             <div 
-              className={`bg-white/5 backdrop-blur-xl rounded-3xl p-8 border border-white/10 hover:border-blue-500/30 transition-all duration-700 group hover:scale-[1.02] ${
+              className={`bg-white/5 backdrop-blur-xl rounded-3xl p-8 border border-white/10 hover:border-blue-500/30 transition-all duration-700 group hover:scale-[1.02] text-center ${
                 featuresAnim.isVisible 
                   ? 'opacity-100 translate-y-0' 
                   : 'opacity-0 translate-y-10'
               }`}
               style={{ transitionDelay: '300ms' }}
             >
-              <div className="w-14 h-14 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                <TrendingUp className="w-7 h-7 text-blue-400 group-hover:text-cyan-400 transition-colors duration-300" />
+              <div className="flex justify-center mb-6">
+                <div className="w-14 h-14 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <TrendingUp className="w-7 h-7 text-blue-400 group-hover:text-cyan-400 transition-colors duration-300" />
+                </div>
               </div>
-              <h3 className="text-2xl mb-4">Lower Latency</h3>
-              <p className="text-gray-400">
+              <h3 className="text-2xl mb-4 text-center">Lower Latency</h3>
+              <p className="text-gray-400 text-center">
                 Reduce input lag and network latency with optimized network settings, disabled mouse acceleration, and priority configurations.
               </p>
             </div>
@@ -203,9 +211,9 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
                 : 'opacity-0 translate-y-10'
             }`}
           >
-            <p className="text-cyan-400 text-sm uppercase tracking-widest mb-4">New Games and Apps Added Every Day!</p>
-            <h2 className="text-5xl md:text-6xl mb-6">Supported Games</h2>
-            <p className="text-gray-400 text-lg">
+            <p className="text-cyan-400 text-sm uppercase tracking-widest mb-4 text-center">New Games and Apps Added Every Day!</p>
+            <h2 className="text-5xl md:text-6xl mb-6 text-center">Supported Games</h2>
+            <p className="text-gray-400 text-lg text-center">
               Optimized configurations for your favorite titles
             </p>
           </div>
@@ -235,7 +243,7 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
                   >
                     <img src={game.image} alt={game.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-80"></div>
-                    <div className="absolute bottom-6 left-6 right-6">
+                    <div className="absolute bottom-6 left-6 right-6 text-center">
                       <h3 className="text-xl text-white">{game.name}</h3>
                     </div>
                   </div>
@@ -258,7 +266,7 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
                   >
                     <img src={game.image} alt={game.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-80"></div>
-                    <div className="absolute bottom-6 left-6 right-6">
+                    <div className="absolute bottom-6 left-6 right-6 text-center">
                       <h3 className="text-xl text-white">{game.name}</h3>
                     </div>
                   </div>
@@ -289,8 +297,8 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
                 : 'opacity-0 translate-y-10'
             }`}
           >
-            <h2 className="text-5xl md:text-6xl mb-6">How It Works</h2>
-            <p className="text-gray-400 text-lg">
+            <h2 className="text-5xl md:text-6xl mb-6 text-center">How It Works</h2>
+            <p className="text-gray-400 text-lg text-center">
               Simple, transparent, and effective
             </p>
           </div>
@@ -318,14 +326,14 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
             ].map((item, index) => (
               <div
                 key={index}
-                className={`flex gap-6 items-start bg-white/5 backdrop-blur-xl rounded-3xl p-8 border border-white/10 hover:border-blue-500/30 transition-all duration-700 group hover:scale-[1.02] ${
+                className={`flex flex-col md:flex-row gap-6 items-center text-center md:text-left bg-white/5 backdrop-blur-xl rounded-3xl p-8 border border-white/10 hover:border-blue-500/30 transition-all duration-700 group hover:scale-[1.02] ${
                   howItWorksAnim.isVisible 
                     ? 'opacity-100 translate-y-0' 
                     : 'opacity-0 translate-y-10'
                 }`}
                 style={{ transitionDelay: `${(index + 1) * 150}ms` }}
               >
-                <div className="flex-shrink-0">
+                <div className="flex-shrink-0 mx-auto md:mx-0">
                   <div className="w-16 h-16 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                     <item.icon className="w-8 h-8 text-blue-400 group-hover:text-cyan-400 transition-colors duration-300" />
                   </div>
@@ -346,35 +354,37 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
         <div className="max-w-4xl w-full">
           <div 
             ref={ctaAnim.ref}
-            className={`bg-gradient-to-br from-blue-500/10 to-cyan-500/10 backdrop-blur-xl rounded-3xl p-12 border border-blue-500/20 transition-all duration-1000 ${
+            className={`bg-gradient-to-br from-blue-500/10 to-cyan-500/10 backdrop-blur-xl rounded-3xl p-12 border border-blue-500/20 transition-all duration-1000 text-center ${
               ctaAnim.isVisible 
                 ? 'opacity-100 scale-100' 
                 : 'opacity-0 scale-95'
             }`}
           >
-            <h2 className="text-5xl md:text-6xl mb-6">Ready to Optimize?</h2>
-            <p className="text-gray-400 text-lg mb-10 max-w-2xl mx-auto">
+            <h2 className="text-5xl md:text-6xl mb-6 text-center">Ready to Optimize?</h2>
+            <p className="text-gray-400 text-lg mb-10 max-w-2xl mx-auto text-center">
               Join thousands of gamers who have unlocked their PC&apos;s full potential with Axira Optimizer.
             </p>
-            <button
-              onClick={() => onNavigate('login')}
-              className="px-10 py-5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-full hover:from-blue-600 hover:to-cyan-600 transition-all duration-500 shadow-lg shadow-blue-500/50 hover:shadow-blue-500/70 hover:scale-[1.02] text-lg flex items-center gap-2 mx-auto group"
-            >
-              Get Started Now
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
-            </button>
+            <div className="flex justify-center">
+              <button
+                onClick={() => onNavigate('login')}
+                className="px-10 py-5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-full hover:from-blue-600 hover:to-cyan-600 transition-all duration-500 shadow-lg shadow-blue-500/50 hover:shadow-blue-500/70 hover:scale-[1.02] text-lg flex items-center gap-2 group"
+              >
+                Get Started Now
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
+              </button>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Footer */}
       <footer className="border-t border-white/5 py-8 px-6 w-full flex justify-center">
-        <div className="max-w-7xl flex flex-col md:flex-row items-center justify-between gap-4 w-full">
-          <div className="flex items-center gap-3">
+        <div className="max-w-7xl flex flex-col md:flex-row items-center justify-between gap-4 w-full text-center md:text-left">
+          <div className="flex items-center gap-3 mx-auto md:mx-0">
             <Logo size="sm" className="!w-6 !h-6" />
             <span className="text-gray-400">© 2024 Axira Optimizer. All rights reserved.</span>
           </div>
-          <div className="flex gap-6">
+          <div className="flex gap-6 mx-auto md:mx-0">
             <a href="#" className="text-gray-400 hover:text-white transition-colors text-sm uppercase tracking-wider">Discord</a>
             <a href="#" className="text-gray-400 hover:text-white transition-colors text-sm uppercase tracking-wider">Support</a>
             <a href="#" className="text-gray-400 hover:text-white transition-colors text-sm uppercase tracking-wider">Terms</a>
