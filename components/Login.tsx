@@ -1,185 +1,360 @@
 import { useState } from 'react';
-import { Lock, User, Key, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Loader2, User, Lock, Key } from 'lucide-react';
+import { keyAuthLogin, keyAuthRegister } from '../utils/keyauth';
+import { generateDeviceFingerprint, getUserIP, isDeviceAuthorized, lockUserToDevice } from '../utils/deviceFingerprint';
+import { Logo } from './Logo';
+import { Snowflakes } from './Snowflakes';
 
-interface LoginProps {
-  onLoginSuccess: (username: string, licenseType: string) => void;
+interface LoginPageProps {
+  onLogin: (username: string, packageId: string, packageName: string, key?: string) => void;
+  onBack: () => void;
 }
 
-export default function Login({ onLoginSuccess }: LoginProps) {
+export function LoginPage({ onLogin, onBack }: LoginPageProps) {
+  const [isSignUp, setIsSignUp] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [licenseKey, setLicenseKey] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const validateLicenseKey = (key: string): string | null => {
-    if (key.startsWith('ELITE-')) return 'Elite';
-    if (key.startsWith('FOUNDATION-')) return 'Foundation';
-    if (key.startsWith('CHECKUP-')) return 'Checkup';
-    if (key.startsWith('PRO-')) return 'Pro';
-    if (key.startsWith('BASIC-')) return 'Basic';
-    return null;
-  };
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
+    setIsLoading(true);
 
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      // Generate device fingerprint (HWID for web)
+      const hwid = await generateDeviceFingerprint();
+      const ip = await getUserIP();
 
-    // Validate inputs
-    if (!username || !password || !licenseKey) {
-      setError('All fields are required');
-      setLoading(false);
-      return;
+      if (isSignUp) {
+        // Register new user - requires license key
+        const result = await keyAuthRegister(username, password, licenseKey);
+        if (result.success) {
+          // Save user registration data for admin panel
+          const userData = {
+            key: licenseKey,
+            username: username,
+            password: password, // Store for admin visibility (KeyAuth still handles auth)
+            packageTier: licenseKey.split('-')[0].toUpperCase(),
+            registeredDate: new Date().toLocaleDateString(),
+            lastLogin: 'Never',
+            notes: '',
+            status: 'active' as const,
+            expiryDate: 'Unknown',
+            hwid: hwid, // Lock to this device
+            hwidLocked: true,
+            lastIP: ip,
+            loginAttempts: [],
+            totalLogins: 0
+          };
+
+          // Get existing users
+          const savedUsers = localStorage.getItem('optiaxira_users');
+          const users = savedUsers ? JSON.parse(savedUsers) : [];
+          
+          // Add new user
+          users.push(userData);
+          
+          // Save back to localStorage
+          localStorage.setItem('optiaxira_users', JSON.stringify(users));
+
+          alert('Account created successfully! Please login.');
+          setIsSignUp(false);
+          setPassword('');
+          setLicenseKey('');
+        } else {
+          alert(result.message);
+        }
+      } else {
+        // Check HWID before allowing login
+        const savedUsers = localStorage.getItem('optiaxira_users');
+        if (savedUsers) {
+          const users = JSON.parse(savedUsers);
+          const existingUser = users.find((u: any) => u.username === username);
+          
+          // If user exists and has HWID lock enabled
+          if (existingUser && existingUser.hwidLocked && existingUser.hwid) {
+            if (existingUser.hwid !== hwid) {
+              // HWID MISMATCH - BLOCK LOGIN
+              const userIndex = users.findIndex((u: any) => u.username === username);
+              if (userIndex !== -1) {
+                if (!users[userIndex].loginAttempts) users[userIndex].loginAttempts = [];
+                users[userIndex].loginAttempts.push({
+                  timestamp: new Date().toLocaleString(),
+                  status: '🚫 HWID MISMATCH - BLOCKED',
+                  ip: ip,
+                  hwid: hwid.substring(0, 8) + '...',
+                  expectedHwid: existingUser.hwid.substring(0, 8) + '...'
+                });
+                localStorage.setItem('optiaxira_users', JSON.stringify(users));
+              }
+              
+              alert(`🚫 ACCOUNT LOCKED!\n\nThis account is locked to a different device.\n\nYour HWID: ${hwid.substring(0, 12)}...\nAuthorized HWID: ${existingUser.hwid.substring(0, 12)}...\n\nContact admin to reset your HWID.`);
+              setIsLoading(false);
+              return;
+            }
+          }
+        }
+
+        // Login existing user - no license key needed
+        const result = await keyAuthLogin(username, password, licenseKey);
+        if (result.success && result.packageType && result.packageName) {
+          // Get existing users
+          const savedUsers = localStorage.getItem('optiaxira_users');
+          const users = savedUsers ? JSON.parse(savedUsers) : [];
+
+          // Check if user already exists
+          const existingUserIndex = users.findIndex((u: any) => u.username === username);
+          
+          if (existingUserIndex !== -1) {
+            // Update existing user's last login
+            users[existingUserIndex].lastLogin = new Date().toLocaleString();
+            users[existingUserIndex].password = password; // Update password in case they changed it
+            users[existingUserIndex].packageTier = result.packageType;
+            users[existingUserIndex].expiryDate = result.expiryDate;
+            users[existingUserIndex].lastIP = ip;
+            users[existingUserIndex].totalLogins = (users[existingUserIndex].totalLogins || 0) + 1;
+            
+            // Log successful login attempt
+            if (!users[existingUserIndex].loginAttempts) users[existingUserIndex].loginAttempts = [];
+            users[existingUserIndex].loginAttempts.push({
+              timestamp: new Date().toLocaleString(),
+              status: 'Success',
+              ip: ip,
+              hwid: hwid.substring(0, 8) + '...'
+            });
+
+            // Keep only last 10 login attempts
+            if (users[existingUserIndex].loginAttempts.length > 10) {
+              users[existingUserIndex].loginAttempts = users[existingUserIndex].loginAttempts.slice(-10);
+            }
+
+            // Lock to device if not already locked
+            if (!users[existingUserIndex].hwid) {
+              users[existingUserIndex].hwid = hwid;
+              users[existingUserIndex].hwidLocked = true;
+            }
+          } else {
+            // Add new user
+            const userData = {
+              key: licenseKey || 'N/A',
+              username: username,
+              password: password, // Store for admin visibility
+              packageTier: result.packageType,
+              registeredDate: new Date().toLocaleDateString(),
+              lastLogin: new Date().toLocaleString(),
+              notes: '',
+              status: 'active' as const,
+              expiryDate: result.expiryDate,
+              hwid: hwid,
+              hwidLocked: true,
+              lastIP: ip,
+              loginAttempts: [{
+                timestamp: new Date().toLocaleString(),
+                status: 'Success',
+                ip: ip,
+                hwid: hwid.substring(0, 8) + '...'
+              }],
+              totalLogins: 1
+            };
+            users.push(userData);
+          }
+
+          // Save back to localStorage
+          localStorage.setItem('optiaxira_users', JSON.stringify(users));
+
+          onLogin(username, result.packageType, result.packageName, licenseKey);
+        } else {
+          // Log failed login attempt
+          const savedUsers = localStorage.getItem('optiaxira_users');
+          if (savedUsers) {
+            const users = JSON.parse(savedUsers);
+            const userIndex = users.findIndex((u: any) => u.username === username);
+            if (userIndex !== -1) {
+              if (!users[userIndex].loginAttempts) users[userIndex].loginAttempts = [];
+              users[userIndex].loginAttempts.push({
+                timestamp: new Date().toLocaleString(),
+                status: 'Failed - Wrong Password',
+                ip: ip,
+                hwid: hwid.substring(0, 8) + '...'
+              });
+              localStorage.setItem('optiaxira_users', JSON.stringify(users));
+            }
+          }
+          
+          alert(result.message);
+        }
+      }
+    } catch (error) {
+      alert('An error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
-
-    // Validate license key format
-    const licenseType = validateLicenseKey(licenseKey);
-    if (!licenseType) {
-      setError('Invalid license key format');
-      setLoading(false);
-      return;
-    }
-
-    // Mock authentication - Replace with actual API call
-    if (password.length < 6) {
-      setError('Invalid credentials');
-      setLoading(false);
-      return;
-    }
-
-    // Check HWID (simulated - will be real in production)
-    const storedHWID = localStorage.getItem(`hwid_${username}`);
-    const currentHWID = navigator.userAgent + navigator.platform;
-    
-    if (storedHWID && storedHWID !== currentHWID) {
-      setError('HWID mismatch - Account locked to another device');
-      setLoading(false);
-      // Log failed attempt (would be sent to backend in production)
-      console.error('Failed login attempt - HWID mismatch', {
-        username,
-        timestamp: new Date().toISOString(),
-      });
-      return;
-    }
-
-    // Store HWID on first login
-    if (!storedHWID) {
-      localStorage.setItem(`hwid_${username}`, currentHWID);
-    }
-
-    setLoading(false);
-    onLoginSuccess(username, licenseType);
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-black px-4">
-      <div className="max-w-md w-full">
-        {/* Logo Section */}
-        <div className="text-center mb-8">
-          <h1 className="text-blue-500 mb-2">Axira Optimizer</h1>
-          <p className="text-gray-400">Sign in to access your optimization tools</p>
+    <div className="min-h-screen bg-black flex items-center justify-center p-4 relative overflow-hidden">
+      <Snowflakes />
+      
+      {/* CHRISTMAS BANNER */}
+      <div className="fixed top-0 left-0 right-0 bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-600 py-1.5 text-center z-[100] shadow-lg shadow-blue-500/30">
+        <p className="text-xs">🎅 MERRY CHRISTMAS! HAPPY HOLIDAYS! 🎄 SPECIAL FESTIVE EDITION! ❄️</p>
+      </div>
+      
+      {/* Back Button */}
+      {onBack && (
+        <button
+          onClick={onBack}
+          className="fixed top-24 left-6 z-50 px-4 py-2 bg-white/5 backdrop-blur-xl text-white rounded-full border border-white/10 hover:border-white/30 hover:bg-white/10 transition-all duration-300 flex items-center gap-2"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          Back to Home
+        </button>
+      )}
+      
+      <div className="relative w-full max-w-md">
+        {/* Logo & Title */}
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-32 h-32 mb-6 relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-2xl blur-xl"></div>
+            <div className="relative z-10 w-24 h-24 flex items-center justify-center">
+              <Logo size="xl" className="!w-24 !h-24 drop-shadow-2xl" />
+            </div>
+          </div>
+          <h1 className="text-white text-5xl mb-3 tracking-tight">Axira Optimizer</h1>
+          <p className="text-gray-400 text-sm uppercase tracking-widest">Performance Optimization Suite</p>
         </div>
 
         {/* Login Form */}
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Username */}
+        <div className="bg-white/5 backdrop-blur-2xl rounded-xl p-8 border border-white/10 shadow-2xl hover:border-blue-500/30 transition-all duration-500">
+          <div className="flex gap-1 mb-8 bg-white/5 p-1 rounded-lg">
+            <button
+              onClick={() => setIsSignUp(false)}
+              className={`flex-1 py-2.5 rounded-md transition-all duration-300 ${
+                !isSignUp
+                  ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/50'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              Login
+            </button>
+            <button
+              onClick={() => setIsSignUp(true)}
+              className={`flex-1 py-2.5 rounded-md transition-all duration-300 ${
+                isSignUp
+                  ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/50'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              Sign Up
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="username" className="block text-white mb-2">
-                Username
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <label className="text-gray-300 text-xs uppercase tracking-wider block mb-2">Username</label>
+              <div className="relative group">
+                <User className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-blue-400 transition-colors" />
                 <input
-                  id="username"
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full bg-black border border-gray-700 rounded-lg pl-10 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter your username"
-                  disabled={loading}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg pl-11 pr-4 py-3.5 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all"
+                  required
                 />
               </div>
             </div>
 
-            {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-white mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <label className="text-gray-300 text-xs uppercase tracking-wider block mb-2">Password</label>
+              <div className="relative group">
+                <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-blue-400 transition-colors" />
                 <input
-                  id="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-black border border-gray-700 rounded-lg pl-10 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter your password"
-                  disabled={loading}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg pl-11 pr-4 py-3.5 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all"
+                  required
                 />
               </div>
             </div>
 
-            {/* License Key */}
-            <div>
-              <label htmlFor="license" className="block text-white mb-2">
-                License Key
-              </label>
-              <div className="relative">
-                <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  id="license"
-                  type="text"
-                  value={licenseKey}
-                  onChange={(e) => setLicenseKey(e.target.value.toUpperCase())}
-                  className="w-full bg-black border border-gray-700 rounded-lg pl-10 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono"
-                  placeholder="ELITE-XXXX-XXXX-XXXX"
-                  disabled={loading}
-                />
-              </div>
-              <p className="mt-2 text-gray-500 text-sm">
-                Format: ELITE-, FOUNDATION-, CHECKUP-, PRO-, BASIC-
-              </p>
-            </div>
-
-            {/* Error Message */}
-            {error && (
-              <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                <p className="text-red-500">{error}</p>
+            {/* Only show license key field for Sign Up */}
+            {isSignUp && (
+              <div>
+                <label className="text-gray-300 text-xs uppercase tracking-wider block mb-2">License Key</label>
+                <div className="relative group">
+                  <Key className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-blue-400 transition-colors" />
+                  <input
+                    type="text"
+                    value={licenseKey}
+                    onChange={(e) => setLicenseKey(e.target.value)}
+                    placeholder="ELITE-XXXXXXXX"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg pl-11 pr-4 py-3.5 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all uppercase"
+                    required
+                  />
+                </div>
+                <p className="text-gray-400 text-xs mt-2">Purchase your license key from our Discord bot</p>
               </div>
             )}
 
-            {/* Submit Button */}
+            {!isSignUp && (
+              <div className="flex items-center justify-between text-xs">
+                <label className="flex items-center text-gray-400 cursor-pointer hover:text-gray-300 transition-colors">
+                  <input type="checkbox" className="mr-2 rounded border-white/20 bg-white/5" />
+                  Remember me
+                </label>
+                <a href="#" className="text-blue-400 hover:text-cyan-400 transition-colors">
+                  Forgot password?
+                </a>
+              </div>
+            )}
+
             <button
               type="submit"
-              disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white py-3 rounded-lg transition-colors"
+              disabled={isLoading}
+              className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white py-3.5 rounded-lg hover:from-blue-600 hover:to-cyan-600 transition-all shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed mt-2"
             >
-              {loading ? 'Authenticating...' : 'Sign In'}
+              {isLoading ? (
+                <div className="flex items-center justify-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Processing...</span>
+                </div>
+              ) : (
+                isSignUp ? 'Create Account' : 'Login to Axira Optimizer'
+              )}
             </button>
           </form>
 
-          {/* Footer Info */}
-          <div className="mt-6 text-center text-gray-400 text-sm">
-            <p>Don&apos;t have a license?</p>
-            <a href="#" className="text-blue-500 hover:text-blue-400 transition-colors">
-              Purchase on Discord
-            </a>
+          <div className="mt-6 pt-6 border-t border-white/5">
+            <p className="text-center text-gray-500 text-xs">
+              {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
+              <button
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="text-blue-400 hover:text-cyan-400 transition-colors"
+              >
+                {isSignUp ? 'Login here' : 'Sign up'}
+              </button>
+            </p>
           </div>
         </div>
 
-        {/* HWID Info */}
-        <div className="mt-6 text-center">
-          <p className="text-gray-500 text-sm">
-            🔒 Protected by HWID locking - One device per account
+        {/* HWID Lock Info */}
+        <div className="mt-6 bg-cyan-500/5 border border-cyan-500/20 rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
+            <p className="text-cyan-400 text-xs">🔒 HWID Lock Protection Active</p>
+          </div>
+          <p className="text-gray-500 text-xs">
+            Your account will be locked to this device. Login from other devices will be blocked for security.
           </p>
         </div>
+
+        <p className="text-center text-gray-600 text-xs mt-6">
+          By continuing, you agree to our Terms of Service and Privacy Policy
+        </p>
       </div>
     </div>
   );
