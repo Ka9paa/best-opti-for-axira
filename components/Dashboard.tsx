@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Zap, 
   Cpu, 
@@ -17,6 +17,8 @@ import {
   Shield
 } from 'lucide-react';
 import { Logo } from './Logo';
+import { SystemSpecsService, SystemSpecs } from '../services/system-specs.service';
+import { SystemSpecsModal } from './SystemSpecsModal';
 
 const OWNER_USERNAME = "deccc";
 
@@ -28,57 +30,36 @@ interface DashboardProps {
 
 export default function Dashboard({ username, licenseKey, onNavigate }: DashboardProps) {
   const isOwner = username.toLowerCase() === OWNER_USERNAME.toLowerCase();
-  
-  const [systemInfo, setSystemInfo] = useState({
-    cpu: 'Loading...',
-    gpu: 'Loading...',
-    ram: 'Loading...',
-    os: 'Loading...'
-  });
+  const [showSpecsModal, setShowSpecsModal] = useState(false);
+  const [systemSpecs, setSystemSpecs] = useState<SystemSpecs | null>(null);
+  const [showWelcome, setShowWelcome] = useState(false);
 
-  const [stats, setStats] = useState({
-    totalTweaks: 98,
-    gamesSupported: 8,
-    tweaksApplied: 0,
-    lastOptimized: 'Never'
-  });
-
+  // Load or detect system specs on mount
   useEffect(() => {
-    // Get system info
-    const getSystemInfo = async () => {
-      try {
-        // Get CPU info
-        const cpuInfo = navigator.hardwareConcurrency 
-          ? `${navigator.hardwareConcurrency} Cores` 
-          : 'Unknown CPU';
-        
-        // Get RAM info (approximate)
-        const ramInfo = (navigator as any).deviceMemory 
-          ? `${(navigator as any).deviceMemory} GB RAM` 
-          : 'Unknown RAM';
-        
-        // Get OS info
-        const osInfo = navigator.platform || 'Unknown OS';
-        
-        setSystemInfo({
-          cpu: cpuInfo,
-          gpu: 'Detecting GPU...',
-          ram: ramInfo,
-          os: osInfo.includes('Win') ? 'Windows' : osInfo
-        });
-      } catch (error) {
-        console.error('Error getting system info:', error);
+    const loadSpecs = async () => {
+      // Check if we've shown welcome before
+      const hasShownWelcome = localStorage.getItem('axira_welcome_shown');
+      
+      // Try to load cached specs
+      let specs = SystemSpecsService.loadSpecs();
+      
+      // If no cached specs, detect them
+      if (!specs) {
+        specs = await SystemSpecsService.getSystemSpecs();
+        SystemSpecsService.saveSpecs(specs);
+      }
+      
+      setSystemSpecs(specs);
+      
+      // Show welcome modal on first login
+      if (!hasShownWelcome) {
+        setShowWelcome(true);
+        setShowSpecsModal(true);
+        localStorage.setItem('axira_welcome_shown', 'true');
       }
     };
-
-    getSystemInfo();
-
-    // Load stats from localStorage
-    const savedStats = localStorage.getItem('optiaxira_stats');
-    if (savedStats) {
-      const parsed = JSON.parse(savedStats);
-      setStats(prev => ({ ...prev, ...parsed }));
-    }
+    
+    loadSpecs();
   }, []);
 
   const getLicenseType = () => {
@@ -155,7 +136,7 @@ export default function Dashboard({ username, licenseKey, onNavigate }: Dashboar
               </div>
               <TrendingUp className="w-5 h-5 text-blue-400" />
             </div>
-            <div className="text-3xl mb-1">{stats.gamesSupported}</div>
+            <div className="text-3xl mb-1">{systemSpecs?.gamesSupported || 8}</div>
             <div className="text-gray-400 text-sm">Games Supported</div>
           </div>
 
@@ -166,7 +147,7 @@ export default function Dashboard({ username, licenseKey, onNavigate }: Dashboar
               </div>
               <TrendingUp className="w-5 h-5 text-cyan-400" />
             </div>
-            <div className="text-3xl mb-1">{stats.totalTweaks}</div>
+            <div className="text-3xl mb-1">{systemSpecs?.totalTweaks || 98}</div>
             <div className="text-gray-400 text-sm">Total Tweaks Available</div>
           </div>
 
@@ -177,7 +158,7 @@ export default function Dashboard({ username, licenseKey, onNavigate }: Dashboar
               </div>
               <TrendingUp className="w-5 h-5 text-green-400" />
             </div>
-            <div className="text-3xl mb-1">{stats.tweaksApplied}</div>
+            <div className="text-3xl mb-1">{systemSpecs?.tweaksApplied || 0}</div>
             <div className="text-gray-400 text-sm">Tweaks Applied</div>
           </div>
 
@@ -188,7 +169,7 @@ export default function Dashboard({ username, licenseKey, onNavigate }: Dashboar
               </div>
               <Activity className="w-5 h-5 text-purple-400" />
             </div>
-            <div className="text-lg mb-1">{stats.lastOptimized}</div>
+            <div className="text-lg mb-1">{systemSpecs?.lastOptimized || 'Never'}</div>
             <div className="text-gray-400 text-sm">Last Optimization</div>
           </div>
         </div>
@@ -212,7 +193,7 @@ export default function Dashboard({ username, licenseKey, onNavigate }: Dashboar
                   </div>
                   <span className="text-gray-400 text-sm">Processor</span>
                 </div>
-                <div className="text-lg text-white">{systemInfo.cpu}</div>
+                <div className="text-lg text-white">{systemSpecs?.cpu || 'Loading...'}</div>
               </div>
 
               <div className="bg-black/40 rounded-xl p-4 border border-gray-700/50">
@@ -222,7 +203,7 @@ export default function Dashboard({ username, licenseKey, onNavigate }: Dashboar
                   </div>
                   <span className="text-gray-400 text-sm">Memory</span>
                 </div>
-                <div className="text-lg text-white">{systemInfo.ram}</div>
+                <div className="text-lg text-white">{systemSpecs?.ram || 'Loading...'}</div>
               </div>
 
               <div className="bg-black/40 rounded-xl p-4 border border-gray-700/50">
@@ -232,7 +213,7 @@ export default function Dashboard({ username, licenseKey, onNavigate }: Dashboar
                   </div>
                   <span className="text-gray-400 text-sm">Graphics</span>
                 </div>
-                <div className="text-lg text-white">{systemInfo.gpu}</div>
+                <div className="text-lg text-white">{systemSpecs?.gpu || 'Detecting GPU...'}</div>
               </div>
 
               <div className="bg-black/40 rounded-xl p-4 border border-gray-700/50">
@@ -242,7 +223,7 @@ export default function Dashboard({ username, licenseKey, onNavigate }: Dashboar
                   </div>
                   <span className="text-gray-400 text-sm">Operating System</span>
                 </div>
-                <div className="text-lg text-white">{systemInfo.os}</div>
+                <div className="text-lg text-white">{systemSpecs?.os || 'Loading...'}</div>
               </div>
             </div>
 
@@ -254,6 +235,12 @@ export default function Dashboard({ username, licenseKey, onNavigate }: Dashboar
                   <div className="text-gray-400 text-sm">
                     Your system is ready for optimization. Select a game to begin applying performance tweaks.
                   </div>
+                  <button
+                    onClick={() => setShowSpecsModal(true)}
+                    className="mt-3 text-blue-400 hover:text-blue-300 text-sm underline transition-all"
+                  >
+                    View Full System Specifications
+                  </button>
                 </div>
               </div>
             </div>
@@ -383,6 +370,13 @@ export default function Dashboard({ username, licenseKey, onNavigate }: Dashboar
         </div>
         </div>
       </div>
+      {showSpecsModal && (
+        <SystemSpecsModal
+          specs={systemSpecs}
+          onClose={() => setShowSpecsModal(false)}
+          showWelcome={showWelcome}
+        />
+      )}
     </div>
   );
 }
