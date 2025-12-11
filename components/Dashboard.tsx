@@ -14,11 +14,14 @@ import {
   BarChart3,
   Sparkles,
   Gauge,
-  Shield
+  Shield,
+  RotateCcw
 } from 'lucide-react';
 import { Logo } from './Logo';
 import { SystemSpecsService, SystemSpecs } from '../services/system-specs.service';
 import { SystemSpecsModal } from './SystemSpecsModal';
+import { toast } from 'sonner';
+import { generateRestoreScript } from '../utils/optimizationScripts';
 
 const OWNER_USERNAME = "deccc";
 
@@ -47,6 +50,22 @@ export default function Dashboard({ username, licenseKey, onNavigate }: Dashboar
       if (!specs) {
         specs = await SystemSpecsService.getSystemSpecs();
         SystemSpecsService.saveSpecs(specs);
+      }
+      
+      // Load optimization tracking data
+      const optimizationData = localStorage.getItem('axira_optimization_data');
+      if (optimizationData) {
+        const data = JSON.parse(optimizationData);
+        specs.gamesSupported = data.gamesSupported || 8;
+        specs.totalTweaks = data.totalTweaks || 1000;
+        specs.tweaksApplied = data.tweaksApplied || 0;
+        specs.lastOptimized = data.lastOptimized || 'Never';
+      } else {
+        // Set defaults
+        specs.gamesSupported = 8;
+        specs.totalTweaks = 1000;
+        specs.tweaksApplied = 0;
+        specs.lastOptimized = 'Never';
       }
       
       setSystemSpecs(specs);
@@ -368,6 +387,66 @@ export default function Dashboard({ username, licenseKey, onNavigate }: Dashboar
             </div>
           </div>
         </div>
+
+        {/* Restore Services Section */}
+        <div className="mt-6 bg-gradient-to-br from-orange-900/30 to-red-900/30 backdrop-blur-xl border border-orange-500/30 rounded-2xl p-6 hover:border-orange-400/50 transition-all">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
+                <RotateCcw className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl">Restore Default Settings</h2>
+                <p className="text-gray-400 text-sm">Re-enable services and revert optimizations</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-black/40 rounded-xl p-4 border border-orange-500/20 mb-4">
+            <div className="flex items-start gap-3">
+              <Shield className="w-5 h-5 text-orange-400 mt-0.5" />
+              <div>
+                <div className="text-orange-400 mb-2">Having Issues?</div>
+                <div className="text-gray-400 text-sm mb-3">
+                  If you&apos;re experiencing problems after optimization, use the restore script to revert all changes and re-enable Windows services.
+                </div>
+                <ul className="text-gray-400 text-xs space-y-1 ml-4 list-disc">
+                  <li>Re-enables Windows Defender and Security features</li>
+                  <li>Restores Windows Update functionality</li>
+                  <li>Re-activates all disabled services</li>
+                  <li>Reverts power plan to Balanced mode</li>
+                  <li>Re-enables visual effects and animations</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={() => {
+              const restoreScript = generateRestoreScript();
+              const blob = new Blob([restoreScript], { type: 'text/plain' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = 'OPTIAXIRA_RESTORE_SERVICES.bat';
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+              toast.success('Restore script downloaded! Run as Administrator to revert changes.');
+            }}
+            className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-xl p-4 flex items-center justify-center gap-3 transition-all group"
+          >
+            <RotateCcw className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
+            <span>Download Restore Script</span>
+            <Download className="w-5 h-5" />
+          </button>
+
+          <div className="mt-4 text-center text-gray-500 text-xs">
+            Run the downloaded .bat file as Administrator to restore Windows defaults
+          </div>
+        </div>
+
         </div>
       </div>
       {showSpecsModal && (
