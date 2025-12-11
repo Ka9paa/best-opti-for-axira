@@ -10,6 +10,10 @@ export interface SystemSpecs {
   threads: number;
   platform: string;
   userAgent: string;
+  gamesSupported?: number;
+  totalTweaks?: number;
+  tweaksApplied?: number;
+  lastOptimized?: string;
 }
 
 export class SystemSpecsService {
