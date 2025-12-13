@@ -97,30 +97,30 @@ export default function Dashboard({ username, licenseKey, onNavigate }: Dashboar
   };
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      <div className="p-8">
-        {/* Animated Background Elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {/* Grid pattern */}
-          <div className="absolute inset-0" style={{
-            backgroundImage: `
-              linear-gradient(to right, rgba(59, 130, 246, 0.03) 1px, transparent 1px),
-              linear-gradient(to bottom, rgba(59, 130, 246, 0.03) 1px, transparent 1px)
-            `,
-            backgroundSize: '80px 80px'
-          }}></div>
-          
-          {/* Subtle gradients */}
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
-          
-          {/* Grid Pattern */}
-          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiMzYjgyZjYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PHBhdGggZD0iTTM2IDM0djItMnptMCAwdjJoLTJ2LTJoMnptLTIgMmgtMnYtMmgydjJ6bTAgMGgtMnYyaDJ2LTJ6bTIgMGgydjJoLTJ2LTJ6bTAtMmgydi0yaC0ydjJ6bS0yIDB2LTJoLTJ2MmgyeiIvPjwvZz48L2c+PC9zdmc+')] opacity-30"></div>
-          
-          {/* Scanline Effect */}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-500/5 to-transparent animate-scan"></div>
+    <div className="min-h-screen bg-black text-white relative overflow-hidden">
+      {/* INSANE Background Effects */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Animated hexagon grid */}
+        <div className="absolute inset-0 digital-grid opacity-20"></div>
+        
+        {/* Massive glowing orbs */}
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-500/20 rounded-full blur-[150px] animate-pulse"></div>
+        <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-cyan-500/20 rounded-full blur-[150px] animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-purple-500/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }}></div>
+        
+        {/* Scan Lines */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="h-1 w-full bg-gradient-to-r from-transparent via-cyan-400 to-transparent animate-scan"></div>
         </div>
         
+        {/* Particle Grid */}
+        <div className="absolute inset-0" style={{
+          backgroundImage: `radial-gradient(circle, rgba(0, 212, 255, 0.1) 1px, transparent 1px)`,
+          backgroundSize: '50px 50px',
+        }}></div>
+      </div>
+
+      <div className="p-8 relative z-10">
         {/* Content */}
         <div className="relative z-10">
         {/* Header */}
