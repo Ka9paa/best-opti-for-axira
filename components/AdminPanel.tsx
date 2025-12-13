@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Shield, Users, Key, Search, Ban, UserCheck, Edit2, Plus, X, RotateCcw } from 'lucide-react';
+import { Shield, Users, Key, Search, Ban, UserCheck, Edit2, Plus, X, RotateCcw, Activity } from 'lucide-react';
 
 interface AdminPanelProps {
   username: string;
@@ -28,7 +28,7 @@ interface UserData {
 }
 
 export function AdminPanel({ username, onBack }: AdminPanelProps) {
-  const [activeTab, setActiveTab] = useState<'users' | 'admins'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'admins' | 'logins'>('users');
   const [searchQuery, setSearchQuery] = useState('');
   const [isOwner, setIsOwner] = useState(false);
   const [userData, setUserData] = useState<UserData[]>([]);
@@ -205,6 +205,17 @@ export function AdminPanel({ username, onBack }: AdminPanelProps) {
           >
             <Users className="w-5 h-5 inline mr-2" />
             User Management ({userData.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('logins')}
+            className={`px-6 py-3 rounded-lg transition-all ${
+              activeTab === 'logins'
+                ? 'bg-blue-500/30 text-white border-2 border-blue-500'
+                : 'bg-gray-800/50 text-gray-400 border border-gray-700 hover:bg-gray-800'
+            }`}
+          >
+            <Activity className="w-5 h-5 inline mr-2" />
+            Login History
           </button>
           {isOwner && (
             <button
@@ -467,6 +478,141 @@ export function AdminPanel({ username, onBack }: AdminPanelProps) {
                 </div>
               </>
             )}
+          </div>
+        )}
+
+        {/* Login History Tab */}
+        {activeTab === 'logins' && (
+          <div className="space-y-4">
+            <div className="bg-gray-900/80 backdrop-blur-xl rounded-2xl p-6 border border-blue-500/30">
+              <h3 className="text-white text-xl mb-6 flex items-center gap-2">
+                <Activity className="w-6 h-6 text-cyan-400" />
+                All Login Activity
+              </h3>
+
+              {(() => {
+                // Aggregate all login attempts from all users
+                const allLogins: Array<{
+                  username: string;
+                  timestamp: string;
+                  status: string;
+                  ip: string;
+                  hwid: string;
+                  packageTier: string;
+                }> = [];
+
+                userData.forEach(user => {
+                  if (user.loginAttempts && user.loginAttempts.length > 0) {
+                    user.loginAttempts.forEach(attempt => {
+                      allLogins.push({
+                        username: user.username,
+                        timestamp: attempt.timestamp,
+                        status: attempt.status,
+                        ip: attempt.ip,
+                        hwid: attempt.hwid,
+                        packageTier: user.packageTier
+                      });
+                    });
+                  }
+                });
+
+                // Sort by timestamp (most recent first)
+                allLogins.sort((a, b) => {
+                  const dateA = new Date(a.timestamp).getTime();
+                  const dateB = new Date(b.timestamp).getTime();
+                  return dateB - dateA;
+                });
+
+                if (allLogins.length === 0) {
+                  return (
+                    <div className="text-center py-12">
+                      <Activity className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                      <p className="text-gray-400 text-lg">No login activity yet</p>
+                      <p className="text-gray-500 text-sm mt-2">Login attempts will appear here</p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="space-y-2 max-h-[600px] overflow-y-auto">
+                    {allLogins.map((login, idx) => (
+                      <div
+                        key={idx}
+                        className={`bg-black/30 p-4 rounded-lg border transition-all hover:border-cyan-400/50 ${
+                          login.status.includes('Success') 
+                            ? 'border-green-500/20' 
+                            : login.status.includes('BLOCKED') || login.status.includes('MISMATCH')
+                            ? 'border-red-500/30'
+                            : 'border-yellow-500/20'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 grid grid-cols-2 md:grid-cols-5 gap-4">
+                            <div>
+                              <p className="text-gray-400 text-xs mb-1">Username</p>
+                              <p className="text-white">{login.username}</p>
+                              <span className={`inline-block mt-1 px-2 py-0.5 rounded text-xs ${getTierColor(login.packageTier)}`}>
+                                {login.packageTier}
+                              </span>
+                            </div>
+                            <div>
+                              <p className="text-gray-400 text-xs mb-1">Timestamp</p>
+                              <p className="text-white text-sm">{login.timestamp}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-400 text-xs mb-1">Status</p>
+                              <p className={`text-sm ${
+                                login.status.includes('Success') 
+                                  ? 'text-green-400' 
+                                  : login.status.includes('BLOCKED') || login.status.includes('MISMATCH')
+                                  ? 'text-red-400'
+                                  : 'text-yellow-400'
+                              }`}>
+                                {login.status}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-gray-400 text-xs mb-1">IP Address</p>
+                              <p className="text-white text-sm font-mono">{login.ip}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-400 text-xs mb-1">HWID</p>
+                              <p className="text-white text-sm font-mono">{login.hwid}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Statistics */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-green-500/10 border border-green-500/30 rounded-2xl p-6">
+                <p className="text-gray-400 text-sm mb-2">Successful Logins</p>
+                <p className="text-3xl text-green-400">
+                  {userData.reduce((total, user) => {
+                    const successLogins = (user.loginAttempts || []).filter(a => a.status.includes('Success')).length;
+                    return total + successLogins;
+                  }, 0)}
+                </p>
+              </div>
+              <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-6">
+                <p className="text-gray-400 text-sm mb-2">Failed/Blocked Attempts</p>
+                <p className="text-3xl text-red-400">
+                  {userData.reduce((total, user) => {
+                    const failedLogins = (user.loginAttempts || []).filter(a => !a.status.includes('Success')).length;
+                    return total + failedLogins;
+                  }, 0)}
+                </p>
+              </div>
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-2xl p-6">
+                <p className="text-gray-400 text-sm mb-2">Total Users</p>
+                <p className="text-3xl text-blue-400">{userData.length}</p>
+              </div>
+            </div>
           </div>
         )}
       </div>
