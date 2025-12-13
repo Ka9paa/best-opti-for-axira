@@ -10,6 +10,7 @@ import History from './components/History';
 import Settings from './components/Settings';
 import { Snowflakes } from './components/Snowflakes';
 import { AdminPanel } from './components/AdminPanel';
+import { LogoTransition } from './components/LogoTransition';
 
 type Page = 'landing' | 'pricing' | 'login' | 'dashboard' | 'games' | 'game-optimizer' | 'settings' | 'history' | 'admin';
 
@@ -19,11 +20,18 @@ export default function App() {
   const [username, setUsername] = useState('');
   const [packageName, setPackageName] = useState('');
   const [selectedGame, setSelectedGame] = useState('');
+  const [showTransition, setShowTransition] = useState(false);
 
   const handleLoginSuccess = (user: string, packageId: string, pkgName: string, key?: string) => {
     setUsername(user);
     setPackageName(pkgName);
     setIsLoggedIn(true);
+    // Show the sick transition
+    setShowTransition(true);
+  };
+
+  const handleTransitionComplete = () => {
+    setShowTransition(false);
     setCurrentPage('dashboard');
   };
 
@@ -99,14 +107,23 @@ export default function App() {
   return (
     <div className="min-h-screen w-full bg-black">
       {currentPage !== 'landing' && <Snowflakes />}
-      {/* Only show Navbar on landing, pricing, and login pages */}
-      {(currentPage === 'landing' || currentPage === 'pricing' || currentPage === 'login') && (
-        <Navbar
-          onNavigate={handleNavigate}
-          isLoggedIn={isLoggedIn}
-        />
+      
+      {/* Logo Transition Animation */}
+      {showTransition && <LogoTransition onComplete={handleTransitionComplete} />}
+      
+      {/* Only show content when NOT transitioning */}
+      {!showTransition && (
+        <>
+          {/* Only show Navbar on landing, pricing, and login pages */}
+          {(currentPage === 'landing' || currentPage === 'pricing' || currentPage === 'login') && (
+            <Navbar
+              onNavigate={handleNavigate}
+              isLoggedIn={isLoggedIn}
+            />
+          )}
+          <main className="w-full">{renderPage()}</main>
+        </>
       )}
-      <main className="w-full">{renderPage()}</main>
     </div>
   );
 }
