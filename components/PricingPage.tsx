@@ -3,68 +3,73 @@ import { Logo } from './Logo';
 import { Snowflakes } from './Snowflakes';
 
 interface PricingPageProps {
-  onNavigate: (page: 'home' | 'login') => void;
+  onGetStarted: () => void;
 }
 
 const plans = [
   {
     name: 'CHECKUP',
     prefix: 'CHECKUP-',
-    price: '$4.99',
+    price: '€14.99',
     period: 'one-time',
-    description: 'Perfect for trying out basic optimizations',
+    description: 'Basic optimization package',
     icon: Star,
-    color: 'from-green-500 to-emerald-500',
+    color: 'from-blue-500 to-cyan-500',
     features: [
-      'Basic Windows Optimizations',
-      '1 Game Configuration',
-      'Power Plan Optimization',
-      'Network Tweaks',
-      'Visual Effects Reduction'
+      'Cleaning ALL Temporary Files',
+      'Cleaning DISCS',
+      'IMPROVING INPUTLAG',
+      'WINDOWS DEBLOAT',
+      'CLEANING GPU CACHE',
+      'GAME SETTINGS',
+      'UP TO +60 FPS'
     ]
   },
   {
     name: 'FOUNDATION',
     prefix: 'FOUNDATION-',
-    price: '$9.99',
+    price: '€19.99',
     period: 'one-time',
-    description: 'Great for casual gamers looking for more',
+    description: 'Medium optimization package',
     icon: Zap,
-    color: 'from-blue-500 to-cyan-500',
+    color: 'from-yellow-500 to-orange-500',
     popular: true,
     features: [
-      'All CHECKUP features',
-      'Up to 4 Games',
-      'Advanced GPU Settings',
-      'Input Lag Reduction',
-      'Background Service Management',
-      'GPU Profile Inspector Configs (NVIDIA/AMD)',
-      'Discord Support'
+      'ALL THE BENEFITS OF BASIC',
+      'Reduced RESPONSE TIME',
+      'Full WINDOWS OPTIMIZATION',
+      'Using POWERSHELL for PERFORMANCE',
+      'UPDATE ALL DRIVERS',
+      'RAM Optimization and DISK cleaning',
+      'GPU and CPU Optimization',
+      'Cleaning UNNECESSARY SERVICES',
+      'UP TO +175 FPS'
     ]
   },
   {
     name: 'ELITE',
     prefix: 'ELITE-',
-    price: '$19.99',
+    price: '€29.90',
     period: 'one-time',
     description: 'Ultimate package for competitive gamers',
     icon: Crown,
-    color: 'from-yellow-500 to-orange-500',
+    color: 'from-pink-500 to-rose-500',
     features: [
-      'All FOUNDATION features',
-      'All 8 Games Unlocked',
-      'Advanced System Tweaks',
-      'CPU Mitigation Disabling',
-      'Memory Compression Control',
-      'MSI Mode Configuration',
-      'Priority Discord Support',
-      'Lifetime Updates',
-      '98 Unique Optimizations'
+      'ALL BENEFITS OF BASIC & MEDIUM',
+      '100% Reduction of INPUT LAG',
+      'MAXIMUM Settings to GET +FPS',
+      'BEST RESPONSE TIME & PERFORMANCE',
+      'OVERCLOCK GPU and CPU',
+      '100% FULL DELAY REDUCTION',
+      'REMOVING All UNNECESSARY SERVICES',
+      'DEEP CLEANING Of The ENTIRE SYSTEM',
+      'APPS for the BEST CONNECTION',
+      'UP TO +300 FPS'
     ]
   }
 ];
 
-export function PricingPage({ onNavigate }: PricingPageProps) {
+export function PricingPage({ onGetStarted }: PricingPageProps) {
   return (
     <div className="min-h-screen bg-black text-white">
       <Snowflakes />
@@ -142,7 +147,7 @@ export function PricingPage({ onNavigate }: PricingPageProps) {
 
                 {/* CTA Button */}
                 <button
-                  onClick={() => onNavigate('login')}
+                  onClick={onGetStarted}
                   className={`w-full py-3 rounded-lg transition-all duration-300 hover:scale-[1.02] ${
                     plan.popular
                       ? 'bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50'
