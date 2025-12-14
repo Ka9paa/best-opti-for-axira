@@ -1,5 +1,5 @@
 import { X, Sparkles, RefreshCw, Monitor, Cpu, Package, MemoryStick, HardDrive, Wifi, Laptop } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { useState } from 'react';
 
 interface SmartSystemDetectionProps {
