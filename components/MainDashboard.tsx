@@ -1,27 +1,43 @@
 import { useState, useEffect } from 'react';
-import { Zap, HelpCircle, Youtube, Sparkles, Crown, CheckCircle, Bell, Eye, Wrench, Settings, Gamepad2, Cpu, Network, Trash2, Target, Shield, Battery, Monitor, Package, MemoryStick, Search, SlidersHorizontal, ArrowUpDown, RefreshCw, ChevronDown, Wifi, AlertTriangle, ArrowRight, Clock, Globe, FileText, X } from 'lucide-react';
-import { Sidebar } from './Sidebar';
-import { TweakCard } from './TweakCard';
-import { FixCard } from './FixCard';
-import { PowerplanCard } from './PowerplanCard';
-import { PrivacyCard } from './PrivacyCard';
-import { GPUTweakCard } from './GPUTweakCard';
-import { CPUTweakCard } from './CPUTweakCard';
-import { MemoryTweakCard } from './MemoryTweakCard';
-import { NetworkTweakCard } from './NetworkTweakCard';
-import { NvidiaProfileCard } from './NvidiaProfileCard';
+import {
+  Zap,
+  Crown,
+  Database,
+  HelpCircle,
+  PlayCircle,
+  CheckCircle,
+  Trash2,
+  Sliders,
+  Download,
+  MessageCircle,
+  Settings,
+  ChevronRight,
+  Shield,
+  Gauge,
+  Sparkles,
+  Cpu,
+  Monitor,
+  MemoryStick,
+  HardDrive,
+  Battery,
+  Wifi,
+  Lock,
+  Eye,
+  EyeOff,
+  RefreshCw,
+  Download as DownloadIcon,
+  History,
+  Search,
+  X,
+  AlertTriangle,
+  Check,
+  Info,
+  ExternalLink
+} from 'lucide-react';
 import { AISupportAgent } from './AISupportAgent';
-import { SystemChart } from './SystemChart';
 import { SmartSystemDetection } from './SmartSystemDetection';
-import { getTweaksByCategory } from '../services/tweaks-data';
-import { getAllFixes } from '../services/fixes-data';
-import { getAllPrivacyTweaks } from '../services/privacy-data';
-import { getAllGPUTweaks } from '../services/gpu-tweaks-data';
-import { getAllCPUTweaks } from '../services/cpu-tweaks-data';
-import { getAllMemoryTweaks } from '../services/memory-tweaks-data';
-import { getAllNetworkTweaks } from '../services/network-tweaks-data';
 import { getAllCleanupTasks } from '../services/debloat-data';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 const SettingsIcon = Settings;
 
