@@ -32,11 +32,43 @@ import {
   AlertTriangle,
   Check,
   Info,
-  ExternalLink
+  ExternalLink,
+  Bell,
+  Wrench,
+  Gamepad2,
+  Network,
+  Target,
+  Package,
+  ChevronDown,
+  SlidersHorizontal,
+  ArrowUpDown,
+  ArrowRight,
+  Clock,
+  Globe,
+  FileText,
+  Youtube
 } from 'lucide-react';
 import { AISupportAgent } from './AISupportAgent';
 import { SmartSystemDetection } from './SmartSystemDetection';
+import { Sidebar } from './Sidebar';
+import { SystemChart } from './SystemChart';
+import { FixCard } from './FixCard';
+import { TweakCard } from './TweakCard';
+import { PowerplanCard } from './PowerplanCard';
+import { PrivacyCard } from './PrivacyCard';
+import { GPUTweakCard } from './GPUTweakCard';
+import { CPUTweakCard } from './CPUTweakCard';
+import { MemoryTweakCard } from './MemoryTweakCard';
+import { NetworkTweakCard } from './NetworkTweakCard';
+import { NvidiaProfileCard } from './NvidiaProfileCard';
 import { getAllCleanupTasks } from '../services/debloat-data';
+import { getAllFixes } from '../services/fixes-data';
+import { getTweaksByCategory } from '../services/tweaks-data';
+import { getAllPrivacyTweaks } from '../services/privacy-data';
+import { getAllGPUTweaks } from '../services/gpu-tweaks-data';
+import { getAllCPUTweaks } from '../services/cpu-tweaks-data';
+import { getAllMemoryTweaks } from '../services/memory-tweaks-data';
+import { getAllNetworkTweaks } from '../services/network-tweaks-data';
 import { toast } from 'sonner';
 
 const SettingsIcon = Settings;
