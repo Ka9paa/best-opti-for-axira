@@ -1,11 +1,5 @@
-import { useState } from 'react';
-import {
-  ArrowLeft, Monitor, Zap, Settings, Download, Cpu, HardDrive,
-  Wifi, Eye, Gauge, Rocket, RotateCcw, Save, Sparkles, Shield
-} from 'lucide-react';
-import { SystemOptimizerService } from '../services/system-optimizer.service';
 import { OptimizationTerminal } from './OptimizationTerminal';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 
 interface AdvancedGameOptimizerProps {
   game: string;
