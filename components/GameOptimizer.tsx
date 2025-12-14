@@ -1,8 +1,5 @@
-import { useState } from 'react';
-import { ArrowLeft, Monitor, Zap, Settings, Download, FileText, CheckCircle } from 'lucide-react';
-import { generateOptimizationPackage } from '../utils/optimizationScripts';
 import { OptimizationService } from '../services/optimization.service';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 import { ScriptPreviewModal } from './ScriptPreviewModal';
 
 interface GameOptimizerProps {
