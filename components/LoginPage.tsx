@@ -197,8 +197,8 @@ export function LoginPage({ onLogin, onBack }: LoginPageProps) {
       <Snowflakes />
       
       {/* CHRISTMAS BANNER */}
-      <div className="fixed top-0 left-0 right-0 bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-600 py-6 text-center animate-pulse z-[100] shadow-2xl shadow-blue-500/50">
-        <p className="text-3xl">🎅 MERRY CHRISTMAS! HAPPY HOLIDAYS! 🎄 SPECIAL FESTIVE EDITION! ❄️</p>
+      <div className="fixed top-0 left-0 right-0 bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-600 py-1.5 text-center z-[100] shadow-lg shadow-blue-500/30">
+        <p className="text-xs">🎅 MERRY CHRISTMAS! HAPPY HOLIDAYS! 🎄 SPECIAL FESTIVE EDITION! ❄️</p>
       </div>
       
       {/* Back Button */}
