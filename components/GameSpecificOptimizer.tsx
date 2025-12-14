@@ -1,5 +1,28 @@
+import { useState, useEffect } from 'react';
+import {
+  ArrowLeft,
+  Download,
+  RotateCcw,
+  Rocket,
+  Settings,
+  Gamepad2,
+  TrendingUp,
+  Network,
+  Shield,
+  Sparkles,
+  Cpu,
+  Zap
+} from 'lucide-react';
 import { OptimizationTerminal } from "./OptimizationTerminal";
-import { toast } from "sonner@2.0.3";
+import { toast } from "sonner";
+import { SystemOptimizerService } from '../services/system-optimizer.service';
+import { NvidiaProfileInspectorService } from '../services/nvidia-profile-inspector.service';
+import { AMDRadeonSettingsService } from '../services/amd-radeon-settings.service';
+import {
+  getGameSpecificTweaks,
+  getDefaultOptimizations,
+  getTweaksByCategory
+} from '../services/game-specific-tweaks';
 
 interface GameSpecificOptimizerProps {
   game: string;
